@@ -1,10 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import AutoStoreGrid from "@/components/icons/AutoStoreGrid";
 
 export default function HeroSection() {
-  const { ref, isVisible } = useScrollAnimation(0.1);
+  const { ref, isVisible } = useScrollAnimation(0.05);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 100);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
@@ -12,64 +19,101 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center pt-20 bg-bg-primary overflow-hidden">
-      {/* Dot matrix background */}
+    <section className="relative min-h-[100dvh] flex items-center pt-20 bg-bg-primary overflow-hidden noise-bg">
+      {/* Radial gradient background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(245,158,11,0.08),transparent)]" />
+
+      {/* Dot matrix */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.025]"
         style={{
           backgroundImage: "radial-gradient(circle, #F1F5F9 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
+          backgroundSize: "32px 32px",
         }}
       />
 
-      <div
-        ref={ref}
-        className="max-w-container mx-auto px-6 py-16 lg:py-24 relative z-10"
-      >
-        <div className="grid lg:grid-cols-5 gap-12 lg:gap-16 items-center">
+      <div ref={ref} className="max-w-container mx-auto px-6 py-20 lg:py-32 relative z-10">
+        <div className="grid lg:grid-cols-5 gap-16 lg:gap-20 items-center">
           {/* Left column (3/5) */}
-          <div className={`lg:col-span-3 animate-fade-in-left ${isVisible ? "visible" : ""}`}>
-            <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold leading-tight text-white mb-6">
-              Ihr AutoStore ist voller als Sie denken — nur nicht mit Ware.
+          <div className="lg:col-span-3">
+            <div
+              className={`animate-blur-in ${mounted ? "visible" : ""}`}
+              style={{ transitionDelay: "0s" }}
+            >
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-[0.15em] mb-8">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-glow" />
+                AutoStore Optimierung
+              </span>
+            </div>
+
+            <h1
+              className={`text-4xl sm:text-5xl lg:text-6xl xl:text-[64px] font-extrabold leading-[1.08] tracking-tight mb-8 animate-blur-in ${mounted ? "visible" : ""}`}
+              style={{ transitionDelay: "0.1s" }}
+            >
+              <span className="text-gradient-white">Ihr AutoStore ist voller als Sie denken</span>
+              <br />
+              <span className="text-gradient">— nur nicht mit Ware.</span>
             </h1>
-            <p className="text-lg sm:text-xl text-text-muted mb-8 max-w-xl">
+
+            <p
+              className={`text-lg sm:text-xl text-text-muted leading-relaxed mb-10 max-w-lg animate-blur-in ${mounted ? "visible" : ""}`}
+              style={{ transitionDelay: "0.2s" }}
+            >
               Bis zu 40% mehr Kapazität aus Ihrem bestehenden System — ohne
               Erweiterung, ohne Downtime.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div
+              className={`flex flex-col sm:flex-row gap-4 mb-8 animate-blur-in ${mounted ? "visible" : ""}`}
+              style={{ transitionDelay: "0.3s" }}
+            >
               <a
                 href="#kontakt"
                 onClick={(e) => handleScroll(e, "#kontakt")}
-                className="inline-flex items-center justify-center px-8 py-4 bg-accent hover:bg-accent-hover text-text-dark font-bold text-base rounded-lg transition-colors"
+                className="group inline-flex items-center justify-center px-8 py-4 bg-accent hover:bg-accent-hover text-text-dark font-semibold text-base rounded-full transition-all duration-300 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] active:scale-[0.97]"
               >
                 Demo anfragen
+                <svg className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
               </a>
               <a
                 href="#problem"
                 onClick={(e) => handleScroll(e, "#problem")}
-                className="inline-flex items-center justify-center px-8 py-4 border border-white/20 text-white hover:bg-white/5 font-medium text-base rounded-lg transition-colors"
+                className="inline-flex items-center justify-center px-8 py-4 border border-white/10 text-white hover:bg-white/[0.04] hover:border-white/20 font-medium text-base rounded-full transition-all duration-300 active:scale-[0.97]"
               >
                 Mehr erfahren
               </a>
             </div>
 
-            <p className="text-sm text-text-muted">
+            <p
+              className={`text-sm text-text-muted/60 animate-blur-in ${mounted ? "visible" : ""}`}
+              style={{ transitionDelay: "0.4s" }}
+            >
               Bereits im Einsatz bei führenden E-Commerce-Unternehmen
             </p>
           </div>
 
           {/* Right column (2/5) */}
-          <div className={`lg:col-span-2 animate-fade-in-right ${isVisible ? "visible" : ""}`}>
-            <AutoStoreGrid className="w-full h-auto max-w-md lg:max-w-lg mx-auto" />
+          <div
+            className={`lg:col-span-2 animate-scale-in ${mounted ? "visible" : ""}`}
+            style={{ transitionDelay: "0.3s" }}
+          >
+            <div className="relative">
+              <div className="absolute -inset-8 bg-accent/5 rounded-[40px] blur-3xl" />
+              <AutoStoreGrid className="w-full h-auto max-w-md lg:max-w-lg mx-auto relative animate-float" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Trust bar */}
-      <div className="absolute bottom-0 left-0 right-0 bg-bg-secondary/80 backdrop-blur-sm border-t border-line/30">
-        <div className="max-w-container mx-auto px-6 py-5">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-bg-secondary/60 to-transparent backdrop-blur-sm border-t border-white/[0.04]">
+        <div className="max-w-container mx-auto px-6 py-6">
+          <div
+            className={`flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 animate-fade-in-up ${isVisible ? "visible" : ""}`}
+            style={{ transitionDelay: "0.5s" }}
+          >
             <TrustBadge icon="↑" text="40% mehr Kapazität" />
             <TrustBadge icon="⏱" text="< 1 Tag Installation" />
             <TrustBadge icon="🛡" text="0% Downtime" />
@@ -82,9 +126,9 @@ export default function HeroSection() {
 
 function TrustBadge({ icon, text }: { icon: string; text: string }) {
   return (
-    <div className="flex items-center gap-3 px-5 py-2.5 border border-line/50 rounded-full">
-      <span className="text-accent text-lg">{icon}</span>
-      <span className="text-sm font-medium text-text-light whitespace-nowrap">{text}</span>
+    <div className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/[0.06]">
+      <span className="text-accent text-base">{icon}</span>
+      <span className="text-sm font-medium text-text-light/80 whitespace-nowrap">{text}</span>
     </div>
   );
 }

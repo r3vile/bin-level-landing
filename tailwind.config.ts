@@ -18,6 +18,7 @@ const config: Config = {
         accent: {
           DEFAULT: "#F59E0B",
           hover: "#D97706",
+          light: "#FDE68A",
         },
         "text-light": "#F1F5F9",
         "text-muted": "#94A3B8",
@@ -29,8 +30,16 @@ const config: Config = {
         container: "1200px",
       },
       fontFamily: {
-        sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
-        mono: ["'JetBrains Mono'", "monospace"],
+        sans: ["'Plus Jakarta Sans'", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        mono: ["'JetBrains Mono'", "'SF Mono'", "monospace"],
+      },
+      borderRadius: {
+        "2xl": "16px",
+        "3xl": "24px",
+      },
+      transitionTimingFunction: {
+        "apple": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "apple-bounce": "cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },
   },
