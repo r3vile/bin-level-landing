@@ -11,7 +11,6 @@ const metrics = [
 
 const trustBadges = [
   "Made in Germany",
-  "DSGVO-konform",
   "Kompatibel mit gängigen AutoStore-Konfigurationen",
   "Unabhängiges Drittanbieter-Produkt",
 ];

@@ -22,7 +22,7 @@ const steps = [
       </svg>
     ),
     title: "Füllstand erfassen",
-    body: "Bei jedem Bin-Durchlauf am Port misst der ToF-Sensor den verfügbaren Platz und speichert den Wert automatisch.",
+    body: "Bei jedem Bin-Durchlauf am Port misst der Sensor den verfügbaren Platz und speichert den Wert automatisch.",
   },
   {
     num: "03",
