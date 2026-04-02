@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
-const ScanVisualization = dynamic(() => import("@/components/ScanVisualization"), {
+const ScanVisualization = dynamic(() => import("@/components/scan3d"), {
   ssr: false,
   loading: () => <div className="w-full aspect-square" />,
 });
