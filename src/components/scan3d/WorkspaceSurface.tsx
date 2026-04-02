@@ -8,9 +8,9 @@ const PLATE_D = 3.8;
 const PLATE_H = 0.15;
 const GASKET = 0.08;
 
-const plateMat = new THREE.MeshStandardMaterial({ color: "#b8bcc2", roughness: 0.75, metalness: 0.05 });
-const gasketMat = new THREE.MeshStandardMaterial({ color: "#1a1f2e", roughness: 0.9 });
-const screwMat = new THREE.MeshStandardMaterial({ color: "#6b7280", roughness: 0.6, metalness: 0.3 });
+const plateMat = new THREE.MeshStandardMaterial({ color: "#a0a5ad", roughness: 0.6, metalness: 0.1 });
+const gasketMat = new THREE.MeshStandardMaterial({ color: "#1a1f2e", roughness: 0.85 });
+const screwMat = new THREE.MeshStandardMaterial({ color: "#555d68", roughness: 0.4, metalness: 0.5 });
 
 export default function WorkspaceSurface() {
 

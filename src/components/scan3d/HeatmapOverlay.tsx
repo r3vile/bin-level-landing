@@ -16,8 +16,24 @@ export default function HeatmapOverlay({ scanProgress, binFloorY }: Props) {
   useFrame(() => {
     if (!matRef.current) return;
     const sp = scanProgress.current;
-    // Fade in red floor as scan reveals
-    matRef.current.opacity = sp > 0 ? Math.min(sp * 1.2, 0.7) : 0;
+    // Fade in red floor with a soft ramp — peaks at 0.55 opacity
+    if (sp > 0) {
+      const target = Math.min(sp * 1.5, 0.55);
+      matRef.current.opacity = THREE.MathUtils.lerp(matRef.current.opacity, target, 0.1);
+      // Add subtle emissive glow to the red floor
+      matRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+        matRef.current.emissiveIntensity,
+        0.25,
+        0.08,
+      );
+    } else {
+      matRef.current.opacity = THREE.MathUtils.lerp(matRef.current.opacity, 0, 0.15);
+      matRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+        matRef.current.emissiveIntensity,
+        0,
+        0.15,
+      );
+    }
   });
 
   return (
@@ -26,9 +42,11 @@ export default function HeatmapOverlay({ scanProgress, binFloorY }: Props) {
       <meshStandardMaterial
         ref={matRef}
         color="#cc2200"
+        emissive="#cc2200"
+        emissiveIntensity={0}
         transparent
         opacity={0}
-        roughness={0.9}
+        roughness={0.85}
         depthWrite={false}
       />
     </mesh>
