@@ -10,7 +10,7 @@ import ScanEffect from "./ScanEffect";
 import HeatmapOverlay from "./HeatmapOverlay";
 
 const WALL = 0.04;
-const binColor = new THREE.Color("#0c1018");
+const binColor = new THREE.Color("#6b7280");
 
 // Clipping planes to restrict visibility to aperture
 const clipPlanes = [
@@ -30,9 +30,9 @@ const wallMat = new THREE.MeshStandardMaterial({
 });
 
 const gridMat = new THREE.LineBasicMaterial({
-  color: "#334155",
+  color: "#4b5563",
   transparent: true,
-  opacity: 0.2,
+  opacity: 0.3,
   clippingPlanes: clipPlanes,
 });
 

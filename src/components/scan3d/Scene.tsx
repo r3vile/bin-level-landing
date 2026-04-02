@@ -15,7 +15,6 @@ export default function Scene({ onLabelUpdate }: SceneProps) {
   const binOffX = useRef(0);
   const scanProgress = useRef(0);
   const [currentBinIdx, setCurrentBinIdx] = useState(0);
-  const [sensorActive, setSensorActive] = useState(false);
   const lastBinIdx = useRef(0);
 
   const onLabelUpdateRef = useRef(onLabelUpdate);
@@ -45,12 +44,6 @@ export default function Scene({ onLabelUpdate }: SceneProps) {
       setCurrentBinIdx(binIdx);
     }
 
-    // Sensor active during scan
-    const active = scanP > 0 && scanP < 1;
-    if (active !== sensorActive) {
-      setSensorActive(active);
-    }
-
     // Label update (called every frame for smooth opacity transitions)
     onLabelUpdateRef.current(bin.fill, bin.color, labelP);
   });
@@ -65,7 +58,7 @@ export default function Scene({ onLabelUpdate }: SceneProps) {
       <directionalLight position={[-2, 4, -2]} intensity={0.2} />
 
       {/* Workspace */}
-      <WorkspaceSurface sensorActive={sensorActive} />
+      <WorkspaceSurface />
 
       {/* Bin */}
       <Bin

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import * as THREE from "three";
 import { APT_W, APT_D } from "./binData";
 
@@ -9,13 +8,11 @@ const PLATE_D = 3.8;
 const PLATE_H = 0.15;
 const GASKET = 0.08;
 
-const plateMat = new THREE.MeshStandardMaterial({ color: "#dde2e8", roughness: 0.75, metalness: 0.05 });
+const plateMat = new THREE.MeshStandardMaterial({ color: "#b8bcc2", roughness: 0.75, metalness: 0.05 });
 const gasketMat = new THREE.MeshStandardMaterial({ color: "#1a1f2e", roughness: 0.9 });
 const screwMat = new THREE.MeshStandardMaterial({ color: "#6b7280", roughness: 0.6, metalness: 0.3 });
-const stickerMat = new THREE.MeshStandardMaterial({ color: "#eab308", roughness: 0.5 });
 
-export default function WorkspaceSurface({ sensorActive }: { sensorActive: boolean }) {
-  const sensorRef = useRef<THREE.Mesh>(null!);
+export default function WorkspaceSurface() {
 
   // Frame strips around the aperture
   const halfAptW = APT_W / 2;
@@ -81,24 +78,6 @@ export default function WorkspaceSurface({ sensorActive }: { sensorActive: boole
         </mesh>
       ))}
 
-      {/* Warning stickers */}
-      <mesh position={[-0.12, PLATE_H / 2 + 0.005, halfAptD + 0.15]} material={stickerMat}>
-        <boxGeometry args={[0.14, 0.01, 0.14]} />
-      </mesh>
-      <mesh position={[0.12, PLATE_H / 2 + 0.005, halfAptD + 0.15]} material={stickerMat}>
-        <boxGeometry args={[0.14, 0.01, 0.14]} />
-      </mesh>
-
-      {/* Sensor dot */}
-      <mesh ref={sensorRef} position={[0, PLATE_H / 2 + 0.04, -halfAptD - 0.2]}>
-        <sphereGeometry args={[0.06, 12, 12]} />
-        <meshStandardMaterial
-          color={sensorActive ? "#F59E0B" : "#5a6577"}
-          emissive={sensorActive ? "#F59E0B" : "#000000"}
-          emissiveIntensity={sensorActive ? 0.8 : 0}
-          roughness={0.4}
-        />
-      </mesh>
     </group>
   );
 }
