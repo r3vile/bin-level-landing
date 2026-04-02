@@ -1,16 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import AutoStoreGrid from "@/components/icons/AutoStoreGrid";
+
+// Dynamic import for 3D scene — SSR-safe
+const AutoStoreScene = dynamic(() => import("@/components/AutoStoreScene"), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function HeroSection() {
   const { ref, isVisible } = useScrollAnimation(0.05);
   const [mounted, setMounted] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 100);
-    return () => clearTimeout(t);
+    // Delay 3D scene load slightly for smoother page entry
+    const t2 = setTimeout(() => setSceneReady(true), 600);
+    return () => { clearTimeout(t); clearTimeout(t2); };
   }, []);
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -94,14 +104,22 @@ export default function HeroSection() {
             </p>
           </div>
 
-          {/* Right column (2/5) */}
+          {/* Right column (2/5) — 3D Scene */}
           <div
             className={`lg:col-span-2 animate-scale-in ${mounted ? "visible" : ""}`}
             style={{ transitionDelay: "0.3s" }}
           >
-            <div className="relative">
+            <div className="relative aspect-square max-w-md lg:max-w-lg mx-auto">
               <div className="absolute -inset-8 bg-accent/5 rounded-[40px] blur-3xl" />
-              <AutoStoreGrid className="w-full h-auto max-w-md lg:max-w-lg mx-auto relative animate-float" />
+
+              {/* 3D Scene (desktop) with SVG fallback */}
+              <div className="relative w-full h-full">
+                {sceneReady ? (
+                  <AutoStoreScene className="w-full h-full" />
+                ) : (
+                  <AutoStoreGrid className="w-full h-auto animate-float" />
+                )}
+              </div>
             </div>
           </div>
         </div>
