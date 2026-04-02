@@ -6,7 +6,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 const faqs = [
   {
     q: "Wie funktioniert die Messung technisch?",
-    a: "Ein Time-of-Flight Sensor wird über der Port-Öffnung montiert. Bei jedem Bin-Durchlauf misst er per Infrarot-Laufzeitmessung den Abstand zur Oberfläche des Bin-Inhalts und berechnet daraus den prozentualen Füllstand.",
+    a: "Ein Sensor wird über der Port-Öffnung montiert. Bei jedem Bin-Durchlauf misst er den Abstand zur Oberfläche des Bin-Inhalts und berechnet daraus den prozentualen Füllstand.",
   },
   {
     q: "Muss mein WMS angepasst werden?",
@@ -26,7 +26,7 @@ const faqs = [
   },
   {
     q: "Welche Daten werden erhoben und wie werden sie gespeichert?",
-    a: "Bin Level erfasst ausschließlich Füllstandsdaten (Abstandsmessungen) — keine personenbezogenen Daten. Alle Daten werden DSGVO-konform in Deutschland verarbeitet.",
+    a: "Bin Level erfasst ausschließlich Füllstandsdaten (Abstandsmessungen) — keine personenbezogenen Daten. Alle Daten werden in Deutschland verarbeitet.",
   },
 ];
 

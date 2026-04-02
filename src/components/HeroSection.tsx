@@ -64,7 +64,7 @@ export default function HeroSection() {
               className={`text-lg sm:text-xl text-text-muted leading-relaxed mb-10 max-w-lg animate-blur-in ${mounted ? "visible" : ""}`}
               style={{ transitionDelay: "0.2s" }}
             >
-              Bin Level misst den Füllstand jeder AutoStore-Bin per Time-of-Flight Sensor
+              Bin Level misst den Füllstand jeder AutoStore-Bin automatisch
               und schreibt ihn direkt ins AutoStore-System. Ohne WMS-Änderung, sofort einsatzbereit.
             </p>
 
@@ -120,7 +120,6 @@ export default function HeroSection() {
           >
             <TrustBadge text="Im Einsatz bei SportFits (12.000 Bins)" />
             <TrustBadge text="Made in Germany" />
-            <TrustBadge text="DSGVO-konform" />
           </div>
         </div>
       </div>
