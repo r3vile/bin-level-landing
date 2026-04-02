@@ -5,120 +5,115 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 interface SensorBeamProps {
-  position: [number, number, number];
+  active: boolean; // whether the scan is happening
 }
 
-export default function SensorBeam({ position }: SensorBeamProps) {
+export default function SensorBeam({ active }: SensorBeamProps) {
   const beamRef = useRef<THREE.Mesh>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
-  const pulseRef = useRef<THREE.Mesh>(null);
-
-  // Scan line moving down
+  const sensorRef = useRef<THREE.Mesh>(null);
   const scanLineRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
 
-    // Beam pulse
     if (beamRef.current) {
-      const material = beamRef.current.material as THREE.MeshBasicMaterial;
-      material.opacity = 0.12 + Math.sin(t * 3) * 0.06;
+      const mat = beamRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = active ? 0.08 + Math.sin(t * 3) * 0.04 : 0;
     }
 
-    // Ring rotation + pulse
-    if (ringRef.current) {
-      ringRef.current.rotation.y = t * 0.5;
-      const scale = 1 + Math.sin(t * 2) * 0.1;
-      ringRef.current.scale.set(scale, scale, scale);
+    if (sensorRef.current) {
+      const mat = sensorRef.current.material as THREE.MeshStandardMaterial;
+      mat.emissiveIntensity = active ? 1.2 + Math.sin(t * 4) * 0.4 : 0.2;
     }
 
-    // Scan line moving up and down
     if (scanLineRef.current) {
-      const scanY = Math.sin(t * 1.5) * 0.4;
-      scanLineRef.current.position.y = scanY;
-      const mat = scanLineRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.3 + Math.sin(t * 3) * 0.15;
+      scanLineRef.current.visible = active;
+      if (active) {
+        // Scan line sweeps down through the beam
+        const sweep = ((t * 0.8) % 1);
+        scanLineRef.current.position.y = 1.1 - sweep * 1.3;
+        const mat = scanLineRef.current.material as THREE.MeshBasicMaterial;
+        mat.opacity = 0.15 + Math.sin(sweep * Math.PI) * 0.15;
+      }
     }
 
-    // Pulse ring at sensor
-    if (pulseRef.current) {
-      const pulseScale = 1 + (t % 2) * 0.3;
-      const pulseOpacity = Math.max(0, 1 - (t % 2) * 0.5) * 0.15;
-      pulseRef.current.scale.set(pulseScale, pulseScale, pulseScale);
-      (pulseRef.current.material as THREE.MeshBasicMaterial).opacity = pulseOpacity;
+    if (ringRef.current) {
+      ringRef.current.visible = active;
+      ringRef.current.rotation.z = t * 1.5;
+      const mat = ringRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = active ? 0.25 + Math.sin(t * 2) * 0.1 : 0;
     }
   });
 
-  const beamHeight = 2.2;
-
   return (
-    <group position={position}>
-      {/* Sensor housing at top */}
-      <mesh position={[0, beamHeight / 2 + 0.6, 0]}>
-        <cylinderGeometry args={[0.12, 0.15, 0.15, 8]} />
+    <group position={[0, 1.4, 0]}>
+      {/* Sensor device housing */}
+      <mesh ref={sensorRef} position={[0, 0, 0]}>
+        <boxGeometry args={[0.22, 0.1, 0.18]} />
         <meshStandardMaterial
-          color="#F59E0B"
+          color="#1a1a2e"
           emissive="#F59E0B"
-          emissiveIntensity={0.8}
+          emissiveIntensity={0.2}
           metalness={0.7}
           roughness={0.2}
         />
       </mesh>
 
-      {/* Pulse ring around sensor */}
-      <mesh
-        ref={pulseRef}
-        position={[0, beamHeight / 2 + 0.55, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <ringGeometry args={[0.15, 0.25, 16]} />
+      {/* Sensor lens */}
+      <mesh position={[0, -0.06, 0]}>
+        <cylinderGeometry args={[0.06, 0.06, 0.02, 12]} />
+        <meshStandardMaterial
+          color="#F59E0B"
+          emissive="#F59E0B"
+          emissiveIntensity={active ? 1.5 : 0.3}
+          metalness={0.8}
+          roughness={0.1}
+        />
+      </mesh>
+
+      {/* Status LED */}
+      <mesh position={[0.08, 0.05, 0.09]}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshStandardMaterial
+          color={active ? "#10B981" : "#64748B"}
+          emissive={active ? "#10B981" : "#64748B"}
+          emissiveIntensity={active ? 2 : 0.3}
+        />
+      </mesh>
+
+      {/* Beam cone — wider at bottom (bin surface) */}
+      <mesh ref={beamRef} position={[0, -0.75, 0]}>
+        <cylinderGeometry args={[0.03, 0.7, 1.4, 12, 1, true]} />
         <meshBasicMaterial
           color="#F59E0B"
           transparent
-          opacity={0.15}
+          opacity={0}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Main beam cone */}
-      <mesh ref={beamRef} position={[0, 0.05, 0]}>
-        <cylinderGeometry args={[0.05, 0.4, beamHeight, 8, 1, true]} />
-        <meshBasicMaterial
-          color="#F59E0B"
-          transparent
-          opacity={0.12}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {/* Scan line plane moving through beam */}
+      {/* Sweep scan line */}
       <mesh ref={scanLineRef} position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[0.7, 0.7]} />
+        <ringGeometry args={[0, 0.6, 16]} />
         <meshBasicMaterial
           color="#F59E0B"
           transparent
-          opacity={0.25}
+          opacity={0}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Rotating ring */}
-      <mesh ref={ringRef} position={[0, beamHeight / 2 + 0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.2, 0.015, 8, 16]} />
-        <meshBasicMaterial
-          color="#F59E0B"
-          transparent
-          opacity={0.4}
-        />
+      {/* Rotating ring indicator */}
+      <mesh ref={ringRef} position={[0, -0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.12, 0.008, 8, 24]} />
+        <meshBasicMaterial color="#F59E0B" transparent opacity={0} />
       </mesh>
 
       {/* Point light from sensor */}
-      <pointLight
-        position={[0, beamHeight / 2 + 0.5, 0]}
-        color="#F59E0B"
-        intensity={0.8}
-        distance={3}
-      />
+      {active && (
+        <pointLight position={[0, -0.1, 0]} color="#F59E0B" intensity={0.6} distance={2.5} />
+      )}
     </group>
   );
 }
