@@ -42,7 +42,7 @@ export default function HeroSection() {
             >
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-[0.15em] mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-glow" />
-                AutoStore Optimierung
+                Füllstandssensorik für AutoStore
               </span>
             </div>
 
@@ -50,17 +50,17 @@ export default function HeroSection() {
               className={`text-4xl sm:text-5xl lg:text-6xl xl:text-[64px] font-extrabold leading-[1.08] tracking-tight mb-8 animate-blur-in ${mounted ? "visible" : ""}`}
               style={{ transitionDelay: "0.1s" }}
             >
-              <span className="text-gradient-white">Ihr AutoStore ist voller als Sie denken</span>
+              <span className="text-gradient-white">Wissen, wie voll jede Bin wirklich ist.</span>
               <br />
-              <span className="text-gradient">— nur nicht mit Ware.</span>
+              <span className="text-gradient">Automatisch. In Echtzeit.</span>
             </h1>
 
             <p
               className={`text-lg sm:text-xl text-text-muted leading-relaxed mb-10 max-w-lg animate-blur-in ${mounted ? "visible" : ""}`}
               style={{ transitionDelay: "0.2s" }}
             >
-              Bis zu 40% mehr Kapazität aus Ihrem bestehenden System — ohne
-              Erweiterung, ohne Downtime.
+              Bin Level misst den Füllstand jeder AutoStore-Bin per Time-of-Flight Sensor.
+              So weiß Ihr WMS, wo tatsächlich Platz ist — und lagert gezielt ein.
             </p>
 
             <div
@@ -90,7 +90,7 @@ export default function HeroSection() {
               className={`text-sm text-text-muted/60 animate-blur-in ${mounted ? "visible" : ""}`}
               style={{ transitionDelay: "0.4s" }}
             >
-              Bereits im Einsatz bei führenden E-Commerce-Unternehmen
+              Nachrüstbar. Ohne Downtime. Made in Germany.
             </p>
           </div>
 
@@ -114,9 +114,9 @@ export default function HeroSection() {
             className={`flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 animate-fade-in-up ${isVisible ? "visible" : ""}`}
             style={{ transitionDelay: "0.5s" }}
           >
-            <TrustBadge icon="↑" text="40% mehr Kapazität" />
-            <TrustBadge icon="⏱" text="< 1 Tag Installation" />
-            <TrustBadge icon="🛡" text="0% Downtime" />
+            <TrustBadge icon="📐" text="ToF-Sensorik" />
+            <TrustBadge icon="⏱" text="Installation in Stunden" />
+            <TrustBadge icon="🔌" text="Kein Eingriff ins System" />
           </div>
         </div>
       </div>

@@ -4,15 +4,15 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
 
 const metrics = [
-  { target: 40, suffix: "%", label: "mehr Auslastung", sublabel: "im bestehenden System" },
-  { target: 6, prefix: "< ", suffix: " Mon.", label: "Amortisation", sublabel: "typische Payback-Zeit" },
-  { target: 100, suffix: "k+", label: "EUR gespart", sublabel: "durch verzögerte Erweiterung" },
+  { target: 40, suffix: "%", label: "mehr Auslastung", sublabel: "im Referenzprojekt SportFits" },
+  { target: 1, prefix: "< ", suffix: " Tag", label: "Installation", sublabel: "pro Port, ohne Stillstand" },
+  { target: 0, suffix: "", label: "Eingriffe ins System", sublabel: "reine Nachrüstung am Port" },
 ];
 
 const trustBadges = [
   { icon: "🇩🇪", text: "Made in Germany" },
   { icon: "🛡", text: "DSGVO-konform" },
-  { icon: "⊞", text: "Alle AutoStore-Konfigurationen" },
+  { icon: "⊞", text: "Kompatibel mit gängigen AutoStore-Konfigurationen" },
   { icon: "✓", text: "Unabhängiges Drittanbieter-Produkt" },
 ];
 
@@ -67,12 +67,12 @@ export default function ResultsSection() {
         {/* Header */}
         <div className={`text-center mb-20 animate-fade-in-up ${metricsVisible ? "visible" : ""}`}>
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-[0.15em] mb-6">
-            Nachgewiesene Ergebnisse
+            Referenzprojekt
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight max-w-3xl mx-auto">
-            <span className="text-gradient-white">40% mehr Kapazität.</span>
+            <span className="text-gradient-white">Im Einsatz bei SportFits.</span>
             <br />
-            <span className="text-text-muted">Ohne einen einzigen zusätzlichen Bin.</span>
+            <span className="text-text-muted">12.000 Bins. Messbar bessere Auslastung.</span>
           </h2>
         </div>
 
@@ -102,10 +102,10 @@ export default function ResultsSection() {
                 <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151C7.546 6.068 5.983 8.789 5.983 11h4v10H0z" />
               </svg>
               <blockquote className="text-white text-xl lg:text-2xl font-medium italic leading-relaxed mb-8">
-                &ldquo;Bin Level hat uns geholfen, unser AutoStore um 40% besser auszulasten.
-                Die geplante Erweiterung konnten wir verschieben — das hat erheblich Kosten gespart.&rdquo;
+                &ldquo;Durch Bin Level wissen wir erstmals, wie voll unsere Bins tatsächlich sind.
+                Die Daten zeigten, dass wir deutlich mehr Kapazität im bestehenden System hatten als gedacht.&rdquo;
               </blockquote>
-              <p className="text-text-muted font-medium">— Geschäftsführung, SportFits</p>
+              <p className="text-text-muted font-medium">— Geschäftsführung, SportFits GmbH</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (

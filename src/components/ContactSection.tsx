@@ -95,18 +95,17 @@ export default function ContactSection() {
               Kontakt
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-bold text-white leading-[1.1] tracking-tight mb-6">
-              Wie viel ungenutztes Potenzial steckt in Ihrem AutoStore?
+              Lassen Sie uns über Ihr System sprechen.
             </h2>
             <p className="text-text-muted text-lg leading-relaxed mb-10">
-              Vereinbaren Sie eine kostenlose Demo und erfahren Sie, wie Bin Level
-              Ihre Lagerkapazität maximiert.
+              Wir zeigen Ihnen in einer kurzen Demo, wie Bin Level an Ihrem AutoStore-System funktionieren würde.
             </p>
 
             <div className="space-y-5 mb-12">
               {[
-                "Kostenlose Erstanalyse Ihres Systems",
-                "Keine Vertragsbindung",
-                "Installation ohne Downtime",
+                "Unverbindliches Erstgespräch",
+                "Technische Machbarkeitsprüfung für Ihr Setup",
+                "Transparente Preisgestaltung",
               ].map((benefit, i) => (
                 <div
                   key={benefit}
@@ -245,7 +244,7 @@ export default function ContactSection() {
                           Wird gesendet...
                         </span>
                       ) : (
-                        "Kostenlose Demo anfragen"
+                        "Gespräch vereinbaren"
                       )}
                     </button>
 

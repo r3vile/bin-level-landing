@@ -10,8 +10,8 @@ const problems = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
       </svg>
     ),
-    title: "Keine Volumendaten im WMS",
-    body: "Ihr System weiß welche Artikel in der Bin liegen — aber nicht, wie viel Platz noch frei ist.",
+    title: "Kein Füllstand im WMS",
+    body: "Ihr WMS kennt Artikelbestände — aber nicht, wie viel Volumen in einer Bin noch frei ist.",
   },
   {
     icon: (
@@ -19,8 +19,8 @@ const problems = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
       </svg>
     ),
-    title: "Blinde Einlagerung",
-    body: "Beim Wareneingang werden zufällige Bins angedient statt derer mit dem meisten freien Platz.",
+    title: "Einlagerung ohne Volumendaten",
+    body: "Ohne Füllstandsinformation werden Bins zufällig angedient — oft solche, die kaum noch Platz haben.",
   },
   {
     icon: (
@@ -28,8 +28,8 @@ const problems = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 7.756a4.5 4.5 0 100 8.488M7.5 10.5h5.25m-5.25 3h5.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    title: "Teure Erweiterung statt Optimierung",
-    body: "AutoStore-Erweiterungen kosten 100.000€+. Oft wäre im bestehenden System noch Kapazität.",
+    title: "Erweiterung vor Optimierung",
+    body: "AutoStore-Erweiterungen sind kapitalintensiv. Bevor Sie investieren, sollten Sie wissen, ob im bestehenden System noch Kapazität steckt.",
   },
   {
     icon: (
@@ -37,8 +37,8 @@ const problems = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
       </svg>
     ),
-    title: "Manuelle Erfassung unmöglich",
-    body: "Füllstände per Klick pflegen? Bei 10.000+ Bins nicht praktikabel.",
+    title: "Manuell nicht skalierbar",
+    body: "Füllstände händisch erfassen? Bei tausenden Bins ist das weder wirtschaftlich noch zuverlässig.",
   },
 ];
 
@@ -60,12 +60,12 @@ export default function ProblemSection() {
           className={`text-center mb-20 lg:mb-24 animate-fade-in-up ${sectionVisible ? "visible" : ""}`}
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-[0.15em] mb-6">
-            Das unsichtbare Problem
+            Das Problem
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight max-w-3xl mx-auto">
-            <span className="text-gradient-white">Ihr WMS kennt den Füllstand nicht.</span>
+            <span className="text-gradient-white">AutoStore kennt Bestände.</span>
             <br />
-            <span className="text-text-muted">Ihr AutoStore auch nicht.</span>
+            <span className="text-text-muted">Aber nicht Füllstände.</span>
           </h2>
         </div>
 
@@ -107,9 +107,9 @@ export default function ProblemSection() {
           ref={statRef}
           className={`text-center animate-fade-in-up ${statVisible ? "visible" : ""}`}
         >
-          <p className="text-text-muted text-lg mb-4 font-medium">Typische Bin-Auslastung:</p>
+          <p className="text-text-muted text-lg mb-4 font-medium">Typische volumetrische Bin-Auslastung laut Branchenerfahrung:</p>
           <p className="text-gradient text-6xl lg:text-7xl font-bold font-mono mb-8 tracking-tight">
-            nur 22–27%
+            unter 30%
           </p>
           <div className="max-w-sm mx-auto">
             <div className="w-full h-2 bg-white/[0.06] rounded-full overflow-hidden">

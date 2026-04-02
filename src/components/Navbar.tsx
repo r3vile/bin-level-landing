@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Logo from "@/components/icons/Logo";
 
 const navLinks = [
-  { label: "Problem", href: "#problem" },
-  { label: "Lösung", href: "#loesung" },
-  { label: "Ergebnisse", href: "#ergebnisse" },
+  { label: "Herausforderung", href: "#problem" },
+  { label: "So funktioniert's", href: "#loesung" },
+  { label: "Referenz", href: "#ergebnisse" },
   { label: "Kontakt", href: "#kontakt" },
 ];
 
