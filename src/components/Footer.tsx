@@ -16,7 +16,7 @@ export default function Footer() {
             </Link>
           </div>
           <p className="text-sm text-text-muted/40">
-            Made with ❤️ in Germany
+            Entwickelt in Deutschland
           </p>
         </div>
 

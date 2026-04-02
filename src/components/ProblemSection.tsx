@@ -107,7 +107,7 @@ export default function ProblemSection() {
           ref={statRef}
           className={`text-center animate-fade-in-up ${statVisible ? "visible" : ""}`}
         >
-          <p className="text-text-muted text-lg mb-4 font-medium">Typische volumetrische Bin-Auslastung laut Branchenerfahrung:</p>
+          <p className="text-text-muted text-lg mb-4 font-medium">Volumetrische Bin-Auslastung im Referenzprojekt vor Bin Level:</p>
           <p className="text-gradient text-6xl lg:text-7xl font-bold font-mono mb-8 tracking-tight">
             unter 30%
           </p>

@@ -98,7 +98,7 @@ export default function ContactSection() {
               Lassen Sie uns über Ihr System sprechen.
             </h2>
             <p className="text-text-muted text-lg leading-relaxed mb-10">
-              Wir zeigen Ihnen in einer kurzen Demo, wie Bin Level an Ihrem AutoStore-System funktionieren würde.
+              In einem kurzen Gespräch prüfen wir gemeinsam, ob und wie Bin Level an Ihrem AutoStore funktionieren kann.
             </p>
 
             <div className="space-y-5 mb-12">
@@ -129,7 +129,7 @@ export default function ContactSection() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
               </a>
-              <p className="text-text-muted/50 text-sm">{"{PLATZHALTER: Telefonnummer}"}</p>
+              <p className="text-text-muted/50 text-sm">Antwort innerhalb von 24 Stunden</p>
             </div>
           </div>
 
@@ -138,7 +138,8 @@ export default function ContactSection() {
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-b from-accent/[0.08] to-transparent rounded-3xl blur-xl" />
               <div className="relative glass-card rounded-3xl p-8 lg:p-10">
-                <h3 className="text-2xl font-bold text-white mb-8 tracking-tight">Demo anfragen</h3>
+                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Beratungsgespräch anfragen</h3>
+                <p className="text-text-muted/60 text-sm mb-8">Unverbindlich und kostenlos. Wir melden uns innerhalb von 24h.</p>
 
                 {status === "success" ? (
                   <div className="text-center py-16 animate-scale-in visible">
@@ -147,9 +148,9 @@ export default function ContactSection() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
                     </div>
-                    <p className="text-white text-xl font-semibold mb-2">Vielen Dank!</p>
+                    <p className="text-white text-xl font-semibold mb-2">Vielen Dank für Ihre Anfrage!</p>
                     <p className="text-text-muted">
-                      Wir melden uns innerhalb von 24 Stunden bei Ihnen.
+                      Wir melden uns innerhalb von 24 Stunden bei Ihnen, um einen Termin für Ihr Beratungsgespräch zu finden.
                     </p>
                   </div>
                 ) : (
@@ -244,7 +245,7 @@ export default function ContactSection() {
                           Wird gesendet...
                         </span>
                       ) : (
-                        "Gespräch vereinbaren"
+                        "Kostenlos beraten lassen"
                       )}
                     </button>
 
@@ -255,7 +256,7 @@ export default function ContactSection() {
                     )}
 
                     <p className="text-text-muted/40 text-xs text-center pt-1">
-                      Wir melden uns innerhalb von 24 Stunden bei Ihnen.
+                      Unverbindlich und kostenlos. Keine versteckten Kosten.
                     </p>
                   </form>
                 )}

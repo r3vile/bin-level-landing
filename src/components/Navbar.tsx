@@ -61,7 +61,7 @@ export default function Navbar() {
           onClick={(e) => handleNavClick(e, "#kontakt")}
           className="hidden md:inline-flex items-center px-5 py-2.5 bg-accent hover:bg-accent-hover text-text-dark font-semibold text-sm rounded-full transition-all duration-300 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95"
         >
-          Demo anfragen
+          Beratung anfragen
         </a>
 
         {/* Hamburger */}
@@ -110,7 +110,7 @@ export default function Navbar() {
             onClick={(e) => handleNavClick(e, "#kontakt")}
             className="inline-flex items-center justify-center px-5 py-3.5 bg-accent hover:bg-accent-hover text-text-dark font-semibold text-sm rounded-full transition-all duration-300 mt-4"
           >
-            Demo anfragen
+            Beratung anfragen
           </a>
         </div>
       </div>

@@ -10,10 +10,10 @@ const metrics = [
 ];
 
 const trustBadges = [
-  { icon: "🇩🇪", text: "Made in Germany" },
-  { icon: "🛡", text: "DSGVO-konform" },
-  { icon: "⊞", text: "Kompatibel mit gängigen AutoStore-Konfigurationen" },
-  { icon: "✓", text: "Unabhängiges Drittanbieter-Produkt" },
+  "Made in Germany",
+  "DSGVO-konform",
+  "Kompatibel mit gängigen AutoStore-Konfigurationen",
+  "Unabhängiges Drittanbieter-Produkt",
 ];
 
 const tags = ["E-Commerce Sportartikel", "12.000 Bins", "12 Roboter", "Salzweg bei Passau", "Integration: Element Logic"];
@@ -126,9 +126,11 @@ export default function ResultsSection() {
           className={`flex flex-wrap justify-center gap-8 lg:gap-12 animate-fade-in-up ${badgesVisible ? "visible" : ""}`}
         >
           {trustBadges.map((badge) => (
-            <div key={badge.text} className="flex items-center gap-2.5 text-text-muted/60 text-sm transition-colors duration-300 hover:text-text-muted">
-              <span className="text-base">{badge.icon}</span>
-              <span>{badge.text}</span>
+            <div key={badge} className="flex items-center gap-2 text-text-muted/50 text-sm">
+              <svg className="w-3.5 h-3.5 text-text-muted/40 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span>{badge}</span>
             </div>
           ))}
         </div>
