@@ -31,14 +31,13 @@ const steps = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
       </svg>
     ),
-    title: "Daten ins WMS übertragen",
-    body: "Die Füllstandsdaten stehen per API in Ihrem WMS zur Verfügung. Einlagerung kann nach verfügbarem Volumen priorisiert werden.",
+    title: "Füllstand zurückschreiben",
+    body: "Der ermittelte Füllstand wird direkt als Kategorie-Code in AutoStore geschrieben. Sofort nutzbar — ganz ohne WMS-Anpassung.",
   },
 ];
 
 const features = [
   "Alle Port-Typen",
-  "WMS-kompatibel (JTL, SAP, etc.)",
   "Echtzeit-Dashboard",
   "REST API",
   "Made in Germany",
@@ -47,6 +46,7 @@ const features = [
 export default function SolutionSection() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: stepsRef, isVisible: stepsVisible } = useScrollAnimation();
+  const { ref: modesRef, isVisible: modesVisible } = useScrollAnimation();
   const { ref: featuresRef, isVisible: featuresVisible } = useScrollAnimation();
 
   return (
@@ -104,6 +104,61 @@ export default function SolutionSection() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Two integration modes */}
+        <div
+          ref={modesRef}
+          className={`grid md:grid-cols-2 gap-5 mb-16 animate-fade-in-up ${modesVisible ? "visible" : ""}`}
+        >
+          {/* Mode A: Standalone */}
+          <div className="relative bg-white rounded-2xl p-7 lg:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.06)] border-2 border-accent/30">
+            <div className="absolute -top-3 left-6 px-3 py-0.5 bg-accent text-text-dark text-xs font-bold rounded-full">
+              Standard
+            </div>
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 3.75H6.912a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-text-dark tracking-tight">Ohne WMS-Integration</h3>
+                <p className="text-text-dark/50 text-[15px] leading-relaxed mt-1.5">
+                  Der Füllstand wird als Kategorie-Code direkt in AutoStore geschrieben. Ihr bestehendes System nutzt die Daten sofort — ohne jede Anpassung am WMS.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-text-dark/40 ml-14">
+              <svg className="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Kein IT-Projekt nötig
+            </div>
+          </div>
+
+          {/* Mode B: WMS Integration */}
+          <div className="bg-white rounded-2xl p-7 lg:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-text-dark/5 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-text-dark/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-text-dark tracking-tight">Optional: WMS-Anbindung</h3>
+                <p className="text-text-dark/50 text-[15px] leading-relaxed mt-1.5">
+                  Füllstandsdaten können zusätzlich per REST API an Ihr WMS übertragen werden. Für volle Kontrolle über Einlagerungs&shy;strategien nach verfügbarem Volumen.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-text-dark/40 ml-14">
+              <svg className="w-3.5 h-3.5 text-text-dark/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Kompatibel mit JTL, SAP, Descartes, u.a.
+            </div>
+          </div>
         </div>
 
         {/* Feature pills */}

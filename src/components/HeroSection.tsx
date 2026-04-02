@@ -64,8 +64,8 @@ export default function HeroSection() {
               className={`text-lg sm:text-xl text-text-muted leading-relaxed mb-10 max-w-lg animate-blur-in ${mounted ? "visible" : ""}`}
               style={{ transitionDelay: "0.2s" }}
             >
-              Bin Level misst den Füllstand jeder AutoStore-Bin per Time-of-Flight Sensor.
-              So weiß Ihr WMS, wo tatsächlich Platz ist — und lagert gezielt ein.
+              Bin Level misst den Füllstand jeder AutoStore-Bin per Time-of-Flight Sensor
+              und schreibt ihn direkt ins AutoStore-System. Ohne WMS-Änderung, sofort einsatzbereit.
             </p>
 
             <div
