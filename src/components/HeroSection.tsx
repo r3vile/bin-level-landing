@@ -3,24 +3,19 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import AutoStoreGrid from "@/components/icons/AutoStoreGrid";
 
-// Dynamic import for 3D scene — SSR-safe
-const AutoStoreScene = dynamic(() => import("@/components/AutoStoreScene"), {
+const ScanVisualization = dynamic(() => import("@/components/ScanVisualization"), {
   ssr: false,
-  loading: () => null,
+  loading: () => <div className="w-full aspect-square" />,
 });
 
 export default function HeroSection() {
   const { ref, isVisible } = useScrollAnimation(0.05);
   const [mounted, setMounted] = useState(false);
-  const [sceneReady, setSceneReady] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 100);
-    // Delay 3D scene load slightly for smoother page entry
-    const t2 = setTimeout(() => setSceneReady(true), 600);
-    return () => { clearTimeout(t); clearTimeout(t2); };
+    return () => clearTimeout(t);
   }, []);
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -43,7 +38,7 @@ export default function HeroSection() {
       />
 
       <div ref={ref} className="max-w-container mx-auto px-6 py-20 lg:py-32 relative z-10">
-        <div className="grid lg:grid-cols-5 gap-16 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-5 gap-12 lg:gap-16 items-center">
           {/* Left column (3/5) */}
           <div className="lg:col-span-3">
             <div
@@ -104,22 +99,13 @@ export default function HeroSection() {
             </p>
           </div>
 
-          {/* Right column (2/5) — 3D Scene */}
+          {/* Right column (2/5) — Scan Animation */}
           <div
             className={`lg:col-span-2 animate-scale-in ${mounted ? "visible" : ""}`}
             style={{ transitionDelay: "0.3s" }}
           >
-            <div className="relative aspect-square max-w-md lg:max-w-lg mx-auto">
-              <div className="absolute -inset-8 bg-accent/5 rounded-[40px] blur-3xl" />
-
-              {/* 3D Scene (desktop) with SVG fallback */}
-              <div className="relative w-full h-full">
-                {sceneReady ? (
-                  <AutoStoreScene className="w-full h-full" />
-                ) : (
-                  <AutoStoreGrid className="w-full h-auto animate-float" />
-                )}
-              </div>
+            <div className="relative aspect-[4/5] max-w-sm lg:max-w-md mx-auto">
+              <ScanVisualization className="w-full h-full" />
             </div>
           </div>
         </div>
