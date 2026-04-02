@@ -7,23 +7,24 @@ import { BIN_W, BIN_D } from "./binData";
 
 interface Props {
   scanProgress: React.MutableRefObject<number>;
+  fadeOpacity: React.MutableRefObject<number>;
   binFloorY: number;
 }
 
-export default function HeatmapOverlay({ scanProgress, binFloorY }: Props) {
+export default function HeatmapOverlay({ scanProgress, fadeOpacity, binFloorY }: Props) {
   const matRef = useRef<THREE.MeshStandardMaterial>(null!);
 
   useFrame(() => {
     if (!matRef.current) return;
     const sp = scanProgress.current;
-    // Fade in red floor with a soft ramp — peaks at 0.55 opacity
+    const fo = fadeOpacity.current;
+
     if (sp > 0) {
-      const target = Math.min(sp * 1.5, 0.55);
+      const target = Math.min(sp * 1.5, 0.55) * fo;
       matRef.current.opacity = THREE.MathUtils.lerp(matRef.current.opacity, target, 0.1);
-      // Add subtle emissive glow to the red floor
       matRef.current.emissiveIntensity = THREE.MathUtils.lerp(
         matRef.current.emissiveIntensity,
-        0.25,
+        0.25 * fo,
         0.08,
       );
     } else {

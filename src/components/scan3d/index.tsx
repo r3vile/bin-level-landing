@@ -18,22 +18,31 @@ export default function ScanVisualization3D({ className = "" }: { className?: st
 
   return (
     <div className={`relative ${className}`}>
-      <Canvas
-        dpr={[1, 1.5]}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance", localClippingEnabled: true }}
-        camera={{ position: [0, 5.5, 5], fov: 35, near: 0.1, far: 50 }}
-        flat
-        style={{ background: "transparent" }}
+      {/* Soft fade mask — edges dissolve into the dark background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          maskImage: "radial-gradient(ellipse 70% 65% at 50% 45%, black 50%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(ellipse 70% 65% at 50% 45%, black 50%, transparent 100%)",
+        }}
       >
-        <Suspense fallback={null}>
-          <Scene onLabelUpdate={onLabelUpdate} />
-        </Suspense>
-      </Canvas>
+        <Canvas
+          dpr={[1, 1.5]}
+          gl={{ antialias: true, alpha: true, powerPreference: "high-performance", localClippingEnabled: true }}
+          camera={{ position: [0, 6.5, 6], fov: 38, near: 0.1, far: 50 }}
+          flat
+          style={{ background: "transparent" }}
+        >
+          <Suspense fallback={null}>
+            <Scene onLabelUpdate={onLabelUpdate} />
+          </Suspense>
+        </Canvas>
+      </div>
 
       {/* Percentage label overlay */}
       {label.opacity > 0 && (
         <div
-          className="absolute bottom-[8%] left-0 right-0 text-center pointer-events-none"
+          className="absolute bottom-[6%] left-0 right-0 text-center pointer-events-none"
           style={{ opacity: label.opacity }}
         >
           <div
