@@ -21,8 +21,17 @@ const COL_ROBOT_TOP = "#dc2626";
 const COL_ROBOT_LIGHT = "#F59E0B";
 const COL_BIN_INSIDE = "#0e1622";
 
-// ─── Shared mouse world-position (on the grid plane) ───
+// ─── Shared state between all robots ───
 const MouseCtx = createContext<React.RefObject<THREE.Vector3>>(null!);
+
+// Shared registry: each robot writes its current + target cell so others can avoid it
+// Key: "col,row" → robot id occupying that cell
+type OccupancyMap = Map<string, number>;
+const OccupancyCtx = createContext<React.RefObject<OccupancyMap>>(null!);
+
+function cellKey(col: number, row: number): string {
+  return `${col},${row}`;
+}
 
 // ─── Robot path definitions ───
 // Speed = cells per second (1.2 = crosses ~1 cell per 0.8s)
@@ -153,25 +162,24 @@ function inBounds(col: number, row: number): boolean {
 // 4 grid directions: right, down, left, up
 const DIRS: [number, number][] = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 
-// ─── Single Robot with cell-by-cell grid movement + rerouting ───
+// ─── Single Robot with collision avoidance + mouse speed boost ───
 function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number; id: number }) {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.Mesh>(null);
   const mouseWorldRef = useContext(MouseCtx);
+  const occupancyRef = useContext(OccupancyCtx);
 
-  // Mutable state — robot lives at a grid cell and moves toward a target cell
   const state = useRef({
     col: waypoints[0][0],
     row: waypoints[0][1],
     targetCol: waypoints[0][0],
     targetRow: waypoints[0][1],
-    wpIndex: 0, // which high-level waypoint we're heading toward
-    cellT: 0,   // 0-1 interpolation between current and target cell
+    wpIndex: 0,
+    cellT: 0,
     waiting: false,
-    staggerDone: false,
   });
 
-  // Stagger initial position along the path
+  // Stagger initial position
   useMemo(() => {
     const s = state.current;
     const stagger = Math.floor(Math.random() * waypoints.length);
@@ -183,31 +191,49 @@ function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number;
   }, [waypoints]);
 
   useFrame(({ clock }, delta) => {
-    if (!groupRef.current || !mouseWorldRef.current) return;
+    if (!groupRef.current || !mouseWorldRef.current || !occupancyRef.current) return;
     const t = clock.getElapsedTime();
     const s = state.current;
     const clampedDelta = Math.min(delta, 0.05);
     const mouse = mouseWorldRef.current;
+    const occ = occupancyRef.current;
+
+    // ── Register our occupied cells ──
+    occ.set(cellKey(s.col, s.row), id);
+    if (s.targetCol !== s.col || s.targetRow !== s.row) {
+      occ.set(cellKey(s.targetCol, s.targetRow), id);
+    }
+
+    // ── Mouse proximity → speed boost ──
+    const [worldX, worldZ] = cellToWorld(s.col, s.row);
+    const mouseDx = worldX - mouse.x;
+    const mouseDz = worldZ - mouse.z;
+    const mouseDist = Math.sqrt(mouseDx * mouseDx + mouseDz * mouseDz);
+
+    const BOOST_RADIUS = 4.0;
+    let speedMult = 1.0;
+    if (mouseDist < BOOST_RADIUS) {
+      const urgency = 1 - mouseDist / BOOST_RADIUS;
+      speedMult = 1.0 + urgency * urgency * 3.0; // up to 4x speed
+    }
 
     // ── Advance interpolation toward target cell ──
     if (s.targetCol !== s.col || s.targetRow !== s.row) {
-      s.cellT += speed * clampedDelta;
+      s.cellT += speed * speedMult * clampedDelta;
       s.waiting = false;
 
       if (s.cellT >= 1) {
-        // Arrived at target cell
+        // Clear old cell from occupancy
+        occ.delete(cellKey(s.col, s.row));
         s.col = s.targetCol;
         s.row = s.targetRow;
         s.cellT = 0;
       }
     }
 
-    // ── Pick next target when at a cell (cellT ~= 0) ──
+    // ── Pick next target when at a cell ──
     if (s.cellT === 0) {
-      // Figure out which direction leads toward current waypoint target
       const wp = waypoints[s.wpIndex];
-
-      // Did we reach the current waypoint?
       if (s.col === wp[0] && s.row === wp[1]) {
         s.wpIndex = (s.wpIndex + 1) % waypoints.length;
       }
@@ -216,38 +242,33 @@ function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number;
       const dc = Math.sign(goalWP[0] - s.col);
       const dr = Math.sign(goalWP[1] - s.row);
 
-      // Build a list of preferred moves: primary direction first, then perpendiculars
+      // Preferred moves: toward waypoint first, then perpendiculars
       const moves: [number, number][] = [];
-      // Primary: toward waypoint (prefer col first, then row)
       if (dc !== 0) moves.push([dc, 0]);
       if (dr !== 0) moves.push([0, dr]);
-      // Perpendicular alternatives (for rerouting around mouse)
       for (const [dirC, dirR] of DIRS) {
         if (!moves.some(m => m[0] === dirC && m[1] === dirR)) {
-          // Don't go backwards (opposite of where we came from)
-          const backC = -(s.targetCol - s.col) || 0;
-          const backR = -(s.targetRow - s.row) || 0;
-          if (dirC !== backC || dirR !== backR || (backC === 0 && backR === 0)) {
-            moves.push([dirC, dirR]);
-          }
+          moves.push([dirC, dirR]);
         }
       }
 
-      // Pick the first move that's in-bounds and not near the mouse
+      // Check each candidate: must be in-bounds, not near mouse, not occupied by another robot
       let picked = false;
       for (const [mc, mr] of moves) {
         const nc = s.col + mc;
         const nr = s.row + mr;
-        if (inBounds(nc, nr) && !isCellNearMouse(nc, nr, mouse)) {
-          s.targetCol = nc;
-          s.targetRow = nr;
-          picked = true;
-          break;
-        }
+        if (!inBounds(nc, nr)) continue;
+        if (isCellNearMouse(nc, nr, mouse)) continue;
+        // Check occupancy — another robot there?
+        const occupant = occ.get(cellKey(nc, nr));
+        if (occupant !== undefined && occupant !== id) continue;
+        s.targetCol = nc;
+        s.targetRow = nr;
+        picked = true;
+        break;
       }
 
       if (!picked) {
-        // All directions blocked — wait in place
         s.waiting = true;
       }
     }
@@ -255,28 +276,27 @@ function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number;
     // ── Compute world position ──
     const [curX, curZ] = cellToWorld(s.col, s.row);
     const [tgtX, tgtZ] = cellToWorld(s.targetCol, s.targetRow);
-
-    const posX = curX + (tgtX - curX) * s.cellT;
-    const posZ = curZ + (tgtZ - curZ) * s.cellT;
-
-    groupRef.current.position.set(posX, RAIL_H * 0.5, posZ);
+    groupRef.current.position.set(
+      curX + (tgtX - curX) * s.cellT,
+      RAIL_H * 0.5,
+      curZ + (tgtZ - curZ) * s.cellT,
+    );
 
     // ── Face direction of travel ──
     const dirX = s.targetCol - s.col;
     const dirZ = s.targetRow - s.row;
     if (dirX !== 0 || dirZ !== 0) {
       const targetRot = Math.atan2(dirX, dirZ);
-      const currentRot = groupRef.current.rotation.y;
-      let diff = targetRot - currentRot;
+      let diff = targetRot - groupRef.current.rotation.y;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
       groupRef.current.rotation.y += diff * 0.15;
     }
 
-    // ── Pulsing status light ──
+    // ── Status light — faster pulse when near mouse or waiting ──
     if (lightRef.current) {
       const mat = lightRef.current.material as THREE.MeshBasicMaterial;
-      const pulseSpeed = s.waiting ? 6 : 3;
+      const pulseSpeed = s.waiting ? 6 : mouseDist < BOOST_RADIUS ? 5 : 3;
       mat.opacity = 0.6 + Math.sin(t * pulseSpeed + id * 2) * 0.3;
     }
   });
@@ -328,6 +348,7 @@ function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number;
 function Scene() {
   const sceneRef = useRef<THREE.Group>(null);
   const mouseWorldRef = useRef(new THREE.Vector3(999, 0, 999));
+  const occupancyRef = useRef<OccupancyMap>(new Map());
 
   useFrame(({ clock }) => {
     if (!sceneRef.current) return;
@@ -337,20 +358,22 @@ function Scene() {
 
   return (
     <MouseCtx.Provider value={mouseWorldRef}>
-      <MouseTracker mouseWorldRef={mouseWorldRef} />
-      <group ref={sceneRef}>
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[8, 12, 6]} intensity={0.8} color="#e0e8f0" />
-        <directionalLight position={[-5, 8, -4]} intensity={0.3} color="#94a3b8" />
-        <fog attach="fog" args={["#0B1221", 8, 22]} />
+      <OccupancyCtx.Provider value={occupancyRef}>
+        <MouseTracker mouseWorldRef={mouseWorldRef} />
+        <group ref={sceneRef}>
+          <ambientLight intensity={0.4} />
+          <directionalLight position={[8, 12, 6]} intensity={0.8} color="#e0e8f0" />
+          <directionalLight position={[-5, 8, -4]} intensity={0.3} color="#94a3b8" />
+          <fog attach="fog" args={["#0B1221", 8, 22]} />
 
-        <RailGrid />
-        <BinOpenings />
+          <RailGrid />
+          <BinOpenings />
 
-        {ROBOT_DEFS.map((def) => (
-          <Robot key={def.id} id={def.id} waypoints={def.waypoints} speed={def.speed} />
-        ))}
-      </group>
+          {ROBOT_DEFS.map((def) => (
+            <Robot key={def.id} id={def.id} waypoints={def.waypoints} speed={def.speed} />
+          ))}
+        </group>
+      </OccupancyCtx.Provider>
     </MouseCtx.Provider>
   );
 }
