@@ -159,7 +159,7 @@ function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number;
     const baseX = (from[0] + (to[0] - from[0]) * smoothT) * CELL + CELL / 2 - GRID_W / 2;
     const baseZ = (from[1] + (to[1] - from[1]) * smoothT) * CELL + CELL / 2 - GRID_H / 2;
 
-    // Mouse avoidance
+    // Mouse avoidance — speed up along the rail to flee
     const mx = mouseWorldRef.current.x;
     const mz = mouseWorldRef.current.z;
     const dx = baseX - mx;
@@ -167,37 +167,38 @@ function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number;
     const dist = Math.sqrt(dx * dx + dz * dz);
 
     const FLEE_RADIUS = 3.0;
-    const SLOW_RADIUS = 4.5;
+    const SLOW_RADIUS = 5.0;
 
-    // Slow down near mouse, pause if very close
     let speedMult = 1.0;
     if (dist < FLEE_RADIUS) {
-      speedMult = 0.05; // nearly stop
+      // If traveling away from mouse (dot > 0), speed up to flee
+      // If traveling toward mouse (dot < 0), also speed up to pass through faster
+      const urgency = (1 - dist / FLEE_RADIUS);
+      speedMult = 1.0 + urgency * urgency * 3.5;
     } else if (dist < SLOW_RADIUS) {
       const t2 = (dist - FLEE_RADIUS) / (SLOW_RADIUS - FLEE_RADIUS);
-      speedMult = 0.05 + t2 * 0.95;
+      const urgency = 1 - t2;
+      speedMult = 1.0 + urgency * urgency * 1.5;
     }
 
     // Advance along path (clamped delta to avoid jumps on tab switch)
     const clampedDelta = Math.min(delta, 0.05);
     s.progress += speed * clampedDelta * speedMult;
 
-    // Position with flee offset
-    let fleeX = 0;
-    let fleeZ = 0;
-    if (dist < FLEE_RADIUS && dist > 0.01) {
-      const fleePower = (1 - dist / FLEE_RADIUS);
-      const fleeStrength = fleePower * fleePower * 1.2;
-      fleeX = (dx / dist) * fleeStrength;
-      fleeZ = (dz / dist) * fleeStrength;
-    }
+    // Recompute position after speed adjustment (robot stays on rail)
+    const newLoopProgress = s.progress % totalWP;
+    const newSegIndex = Math.floor(newLoopProgress);
+    const newSegT = newLoopProgress - newSegIndex;
+    const newSmoothT = newSegT * newSegT * (3 - 2 * newSegT);
+    const newFrom = waypoints[newSegIndex % totalWP];
+    const newTo = waypoints[(newSegIndex + 1) % totalWP];
+    const targetX = (newFrom[0] + (newTo[0] - newFrom[0]) * newSmoothT) * CELL + CELL / 2 - GRID_W / 2;
+    const targetZ = (newFrom[1] + (newTo[1] - newFrom[1]) * newSmoothT) * CELL + CELL / 2 - GRID_H / 2;
 
-    // Smooth the flee with lerp
+    // Smooth position (stays exactly on grid rails)
     const prevX = groupRef.current.position.x;
     const prevZ = groupRef.current.position.z;
-    const targetX = baseX + fleeX;
-    const targetZ = baseZ + fleeZ;
-    const lerpFactor = 0.08;
+    const lerpFactor = 0.12;
 
     groupRef.current.position.set(
       prevX + (targetX - prevX) * lerpFactor,
@@ -205,9 +206,9 @@ function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number;
       prevZ + (targetZ - prevZ) * lerpFactor,
     );
 
-    // Face direction of travel
-    const dirX = to[0] - from[0];
-    const dirZ = to[1] - from[1];
+    // Face direction of travel (use current segment after flee)
+    const dirX = newTo[0] - newFrom[0];
+    const dirZ = newTo[1] - newFrom[1];
     if (dirX !== 0 || dirZ !== 0) {
       const targetRot = Math.atan2(dirX, dirZ);
       // Smooth rotation
