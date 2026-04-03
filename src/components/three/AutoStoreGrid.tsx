@@ -127,78 +127,105 @@ function BinOpenings() {
   );
 }
 
-// ─── Single Robot with mouse avoidance ───
+// ─── Helpers ───
+// Convert grid cell (col, row) to world position
+function cellToWorld(col: number, row: number): [number, number] {
+  return [
+    col * CELL + CELL / 2 - GRID_W / 2,
+    row * CELL + CELL / 2 - GRID_H / 2,
+  ];
+}
+
+// Check if a grid cell is too close to the mouse (within 2 cells)
+function isCellBlocked(col: number, row: number, mouseWorld: THREE.Vector3): boolean {
+  const [wx, wz] = cellToWorld(col, row);
+  const dx = wx - mouseWorld.x;
+  const dz = wz - mouseWorld.z;
+  return (dx * dx + dz * dz) < (2.0 * CELL) * (2.0 * CELL);
+}
+
+// Expand waypoints into individual cell-by-cell steps along the grid
+function expandWaypoints(waypoints: number[][]): number[][] {
+  const steps: number[][] = [];
+  for (let w = 0; w < waypoints.length; w++) {
+    const from = waypoints[w];
+    const to = waypoints[(w + 1) % waypoints.length];
+    const dc = Math.sign(to[0] - from[0]);
+    const dr = Math.sign(to[1] - from[1]);
+    let c = from[0];
+    let r = from[1];
+    steps.push([c, r]);
+    while (c !== to[0] || r !== to[1]) {
+      if (c !== to[0]) c += dc;
+      else if (r !== to[1]) r += dr;
+      steps.push([c, r]);
+    }
+  }
+  return steps;
+}
+
+// ─── Single Robot with cell-by-cell grid movement ───
 function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number; id: number }) {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.Mesh>(null);
   const mouseWorldRef = useContext(MouseCtx);
 
-  // Mutable state kept in refs for performance
+  // Expand waypoints into individual cell steps once
+  const steps = useMemo(() => expandWaypoints(waypoints), [waypoints]);
+
+  // Mutable state
   const state = useRef({
-    progress: Math.random() * waypoints.length,
-    paused: false,
-    pauseTimer: 0,
-    currentSpeed: speed,
+    stepIndex: Math.floor(Math.random() * steps.length), // stagger start
+    cellT: 0, // 0-1 progress between current cell and next
+    waiting: false,
   });
 
   useFrame(({ clock }, delta) => {
     if (!groupRef.current || !mouseWorldRef.current) return;
     const t = clock.getElapsedTime();
     const s = state.current;
+    const clampedDelta = Math.min(delta, 0.05);
+    const totalSteps = steps.length;
 
-    // Compute base position from waypoints
-    const totalWP = waypoints.length;
-    const loopProgress = s.progress % totalWP;
-    const segIndex = Math.floor(loopProgress);
-    const segT = loopProgress - segIndex;
-    const smoothT = segT * segT * (3 - 2 * segT);
+    const nextCell = steps[(s.stepIndex + 1) % totalSteps];
 
-    const from = waypoints[segIndex % totalWP];
-    const to = waypoints[(segIndex + 1) % totalWP];
+    // Check if the NEXT cell (and the one after) are blocked by mouse
+    const nextBlocked = isCellBlocked(nextCell[0], nextCell[1], mouseWorldRef.current);
+    const afterNext = steps[(s.stepIndex + 2) % totalSteps];
+    const afterBlocked = isCellBlocked(afterNext[0], afterNext[1], mouseWorldRef.current);
 
-    const baseX = (from[0] + (to[0] - from[0]) * smoothT) * CELL + CELL / 2 - GRID_W / 2;
-    const baseZ = (from[1] + (to[1] - from[1]) * smoothT) * CELL + CELL / 2 - GRID_H / 2;
+    if (nextBlocked || afterBlocked) {
+      // Stop at current cell — don't advance
+      s.waiting = true;
+      s.cellT = Math.max(s.cellT - clampedDelta * speed * 2, 0); // ease back to cell center
+    } else {
+      s.waiting = false;
+      // Advance through current cell
+      s.cellT += speed * clampedDelta;
 
-    // Mouse avoidance — speed up along the rail to flee
-    const mx = mouseWorldRef.current.x;
-    const mz = mouseWorldRef.current.z;
-    const dx = baseX - mx;
-    const dz = baseZ - mz;
-    const dist = Math.sqrt(dx * dx + dz * dz);
-
-    const FLEE_RADIUS = 3.0;
-    const SLOW_RADIUS = 5.0;
-
-    let speedMult = 1.0;
-    if (dist < FLEE_RADIUS) {
-      // If traveling away from mouse (dot > 0), speed up to flee
-      // If traveling toward mouse (dot < 0), also speed up to pass through faster
-      const urgency = (1 - dist / FLEE_RADIUS);
-      speedMult = 1.0 + urgency * urgency * 3.5;
-    } else if (dist < SLOW_RADIUS) {
-      const t2 = (dist - FLEE_RADIUS) / (SLOW_RADIUS - FLEE_RADIUS);
-      const urgency = 1 - t2;
-      speedMult = 1.0 + urgency * urgency * 1.5;
+      if (s.cellT >= 1) {
+        s.cellT -= 1;
+        s.stepIndex = (s.stepIndex + 1) % totalSteps;
+      }
     }
 
-    // Advance along path (clamped delta to avoid jumps on tab switch)
-    const clampedDelta = Math.min(delta, 0.05);
-    s.progress += speed * clampedDelta * speedMult;
+    // Recalculate after potential step change
+    const curCell = steps[s.stepIndex % totalSteps];
+    const nxtCell = steps[(s.stepIndex + 1) % totalSteps];
 
-    // Recompute position after speed adjustment (robot stays on rail)
-    const newLoopProgress = s.progress % totalWP;
-    const newSegIndex = Math.floor(newLoopProgress);
-    const newSegT = newLoopProgress - newSegIndex;
-    const newSmoothT = newSegT * newSegT * (3 - 2 * newSegT);
-    const newFrom = waypoints[newSegIndex % totalWP];
-    const newTo = waypoints[(newSegIndex + 1) % totalWP];
-    const targetX = (newFrom[0] + (newTo[0] - newFrom[0]) * newSmoothT) * CELL + CELL / 2 - GRID_W / 2;
-    const targetZ = (newFrom[1] + (newTo[1] - newFrom[1]) * newSmoothT) * CELL + CELL / 2 - GRID_H / 2;
+    // Smoothstep for easing within cell
+    const eased = s.cellT * s.cellT * (3 - 2 * s.cellT);
 
-    // Smooth position (stays exactly on grid rails)
+    const [curX, curZ] = cellToWorld(curCell[0], curCell[1]);
+    const [nxtX, nxtZ] = cellToWorld(nxtCell[0], nxtCell[1]);
+
+    const targetX = curX + (nxtX - curX) * eased;
+    const targetZ = curZ + (nxtZ - curZ) * eased;
+
+    // Smooth position lerp
     const prevX = groupRef.current.position.x;
     const prevZ = groupRef.current.position.z;
-    const lerpFactor = 0.12;
+    const lerpFactor = 0.15;
 
     groupRef.current.position.set(
       prevX + (targetX - prevX) * lerpFactor,
@@ -206,24 +233,22 @@ function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number;
       prevZ + (targetZ - prevZ) * lerpFactor,
     );
 
-    // Face direction of travel (use current segment after flee)
-    const dirX = newTo[0] - newFrom[0];
-    const dirZ = newTo[1] - newFrom[1];
+    // Face direction of travel
+    const dirX = nxtCell[0] - curCell[0];
+    const dirZ = nxtCell[1] - curCell[1];
     if (dirX !== 0 || dirZ !== 0) {
       const targetRot = Math.atan2(dirX, dirZ);
-      // Smooth rotation
       const currentRot = groupRef.current.rotation.y;
       let diff = targetRot - currentRot;
-      // Wrap angle
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
       groupRef.current.rotation.y += diff * 0.1;
     }
 
-    // Pulsing status light — faster when fleeing
+    // Pulsing status light — faster when waiting
     if (lightRef.current) {
       const mat = lightRef.current.material as THREE.MeshBasicMaterial;
-      const pulseSpeed = dist < FLEE_RADIUS ? 8 : 3;
+      const pulseSpeed = s.waiting ? 6 : 3;
       mat.opacity = 0.6 + Math.sin(t * pulseSpeed + id * 2) * 0.3;
     }
   });
