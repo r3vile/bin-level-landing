@@ -17,10 +17,10 @@ export default function GridDivider() {
       className="relative bg-bg-primary overflow-hidden noise-bg"
     >
       {/* Top fade */}
-      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-bg-secondary to-transparent z-10" />
+      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-bg-secondary to-transparent z-10 pointer-events-none" />
 
       {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-surface-light to-transparent z-10" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-surface-light to-transparent z-10 pointer-events-none" />
 
       {/* 3D Grid */}
       <div

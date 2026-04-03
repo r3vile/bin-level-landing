@@ -1,77 +1,85 @@
 "use client";
 
-import { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef, useMemo, createContext, useContext } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 // ─── Grid dimensions ───
 const COLS = 16;
 const ROWS = 10;
-const CELL = 1.0; // cell size in world units
+const CELL = 1.0;
 const RAIL_W = 0.06;
 const RAIL_H = 0.04;
 const GRID_W = COLS * CELL;
 const GRID_H = ROWS * CELL;
 
-// ─── Colour palette (AutoStore-inspired) ───
+// ─── Colour palette ───
 const COL_RAIL = "#8899aa";
 const COL_RAIL_HIGHLIGHT = "#a0b4c4";
 const COL_ROBOT_BODY = "#1a1a1a";
-const COL_ROBOT_TOP = "#dc2626"; // AutoStore red
-const COL_ROBOT_LIGHT = "#F59E0B"; // amber status light
+const COL_ROBOT_TOP = "#dc2626";
+const COL_ROBOT_LIGHT = "#F59E0B";
 const COL_BIN_INSIDE = "#0e1622";
 
-// ─── Robot path definitions ───
-// Each robot has a list of waypoints (grid col, grid row) it cycles through
+// ─── Shared mouse world-position (on the grid plane) ───
+const MouseCtx = createContext<React.RefObject<THREE.Vector3>>(null!);
+
+// ─── Robot path definitions (slower speeds) ───
 const ROBOT_DEFS = [
-  { id: 0, speed: 1.6, waypoints: [[2, 1], [2, 5], [7, 5], [7, 1]] },
-  { id: 1, speed: 1.3, waypoints: [[10, 2], [10, 7], [14, 7], [14, 2]] },
-  { id: 2, speed: 1.8, waypoints: [[5, 7], [12, 7], [12, 3], [5, 3]] },
-  { id: 3, speed: 1.1, waypoints: [[1, 8], [8, 8], [8, 6], [1, 6]] },
-  { id: 4, speed: 1.5, waypoints: [[13, 1], [13, 5], [15, 5], [15, 1]] },
-  { id: 5, speed: 1.4, waypoints: [[3, 2], [3, 4], [6, 4], [6, 2]] },
+  { id: 0, speed: 0.45, waypoints: [[2, 1], [2, 5], [7, 5], [7, 1]] },
+  { id: 1, speed: 0.35, waypoints: [[10, 2], [10, 7], [14, 7], [14, 2]] },
+  { id: 2, speed: 0.5, waypoints: [[5, 7], [12, 7], [12, 3], [5, 3]] },
+  { id: 3, speed: 0.3, waypoints: [[1, 8], [8, 8], [8, 6], [1, 6]] },
+  { id: 4, speed: 0.4, waypoints: [[13, 1], [13, 5], [15, 5], [15, 1]] },
+  { id: 5, speed: 0.38, waypoints: [[3, 2], [3, 4], [6, 4], [6, 2]] },
 ];
+
+// ─── Mouse Raycaster — projects pointer onto grid plane (y=0) ───
+function MouseTracker({ mouseWorldRef }: { mouseWorldRef: React.RefObject<THREE.Vector3> }) {
+  const { camera } = useThree();
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
+  const intersection = useMemo(() => new THREE.Vector3(), []);
+
+  useFrame(({ pointer }) => {
+    if (!mouseWorldRef.current) return;
+    raycaster.setFromCamera(pointer, camera);
+    if (raycaster.ray.intersectPlane(plane, intersection)) {
+      mouseWorldRef.current.lerp(intersection, 0.12);
+    }
+  });
+
+  return null;
+}
 
 // ─── Rail Grid ───
 function RailGrid() {
-  const gridRef = useRef<THREE.Group>(null);
-
   const { railGeo, railMat, railHighMat } = useMemo(() => {
     const geo = new THREE.BoxGeometry(1, RAIL_H, RAIL_W);
     const mat = new THREE.MeshStandardMaterial({
-      color: COL_RAIL,
-      roughness: 0.35,
-      metalness: 0.7,
+      color: COL_RAIL, roughness: 0.35, metalness: 0.7,
     });
     const highMat = new THREE.MeshStandardMaterial({
-      color: COL_RAIL_HIGHLIGHT,
-      roughness: 0.25,
-      metalness: 0.8,
+      color: COL_RAIL_HIGHLIGHT, roughness: 0.25, metalness: 0.8,
     });
     return { railGeo: geo, railMat: mat, railHighMat: highMat };
   }, []);
 
-  // Build rail instances
   const rails = useMemo(() => {
     const items: { pos: [number, number, number]; rot: number; isOuter: boolean }[] = [];
-
-    // Horizontal rails (along X)
     for (let r = 0; r <= ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         items.push({
           pos: [c * CELL + CELL / 2 - GRID_W / 2, 0, r * CELL - GRID_H / 2],
-          rot: 0,
-          isOuter: r === 0 || r === ROWS,
+          rot: 0, isOuter: r === 0 || r === ROWS,
         });
       }
     }
-    // Vertical rails (along Z)
     for (let c = 0; c <= COLS; c++) {
       for (let r = 0; r < ROWS; r++) {
         items.push({
           pos: [c * CELL - GRID_W / 2, 0, r * CELL + CELL / 2 - GRID_H / 2],
-          rot: Math.PI / 2,
-          isOuter: c === 0 || c === COLS,
+          rot: Math.PI / 2, isOuter: c === 0 || c === COLS,
         });
       }
     }
@@ -79,25 +87,17 @@ function RailGrid() {
   }, []);
 
   return (
-    <group ref={gridRef}>
+    <group>
       {rails.map((rail, i) => (
-        <mesh
-          key={i}
-          geometry={railGeo}
-          material={rail.isOuter ? railHighMat : railMat}
-          position={rail.pos}
-          rotation={[0, rail.rot, 0]}
-        />
+        <mesh key={i} geometry={railGeo} material={rail.isOuter ? railHighMat : railMat}
+          position={rail.pos} rotation={[0, rail.rot, 0]} />
       ))}
-      {/* Intersection nubs — small cubes at each grid crossing */}
       {Array.from({ length: (COLS + 1) * (ROWS + 1) }, (_, i) => {
         const c = i % (COLS + 1);
         const r = Math.floor(i / (COLS + 1));
         return (
-          <mesh
-            key={`nub-${i}`}
-            position={[c * CELL - GRID_W / 2, RAIL_H * 0.5, r * CELL - GRID_H / 2]}
-          >
+          <mesh key={`nub-${i}`}
+            position={[c * CELL - GRID_W / 2, RAIL_H * 0.5, r * CELL - GRID_H / 2]}>
             <boxGeometry args={[RAIL_W * 1.6, RAIL_H * 0.5, RAIL_W * 1.6]} />
             <meshStandardMaterial color={COL_RAIL_HIGHLIGHT} roughness={0.3} metalness={0.8} />
           </mesh>
@@ -107,82 +107,123 @@ function RailGrid() {
   );
 }
 
-// ─── Bin openings (dark squares visible through the grid) ───
+// ─── Bin openings ───
 function BinOpenings() {
   return (
-    <instancedMesh args={[undefined, undefined, COLS * ROWS]}>
-      <planeGeometry args={[CELL * 0.75, CELL * 0.75]} />
-      <meshBasicMaterial color={COL_BIN_INSIDE} transparent opacity={0.6} />
+    <>
       {Array.from({ length: COLS * ROWS }, (_, i) => {
         const c = i % COLS;
         const r = Math.floor(i / COLS);
         return (
-          <group key={i}>
-            <mesh
-              position={[
-                c * CELL + CELL / 2 - GRID_W / 2,
-                -RAIL_H * 0.6,
-                r * CELL + CELL / 2 - GRID_H / 2,
-              ]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              <planeGeometry args={[CELL * 0.72, CELL * 0.72]} />
-              <meshBasicMaterial color={COL_BIN_INSIDE} transparent opacity={0.5} />
-            </mesh>
-          </group>
+          <mesh key={i}
+            position={[c * CELL + CELL / 2 - GRID_W / 2, -RAIL_H * 0.6, r * CELL + CELL / 2 - GRID_H / 2]}
+            rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[CELL * 0.72, CELL * 0.72]} />
+            <meshBasicMaterial color={COL_BIN_INSIDE} transparent opacity={0.5} />
+          </mesh>
         );
       })}
-    </instancedMesh>
+    </>
   );
 }
 
-// ─── Single Robot ───
-function Robot({
-  waypoints,
-  speed,
-  id,
-}: {
-  waypoints: number[][];
-  speed: number;
-  id: number;
-}) {
+// ─── Single Robot with mouse avoidance ───
+function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number; id: number }) {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.Mesh>(null);
-  const progressRef = useRef(Math.random() * waypoints.length); // stagger start
+  const mouseWorldRef = useContext(MouseCtx);
 
-  useFrame(({ clock }) => {
-    if (!groupRef.current) return;
+  // Mutable state kept in refs for performance
+  const state = useRef({
+    progress: Math.random() * waypoints.length,
+    paused: false,
+    pauseTimer: 0,
+    currentSpeed: speed,
+  });
+
+  useFrame(({ clock }, delta) => {
+    if (!groupRef.current || !mouseWorldRef.current) return;
     const t = clock.getElapsedTime();
+    const s = state.current;
 
-    // Advance along waypoints
-    progressRef.current += speed * 0.008;
+    // Compute base position from waypoints
     const totalWP = waypoints.length;
-    const loopProgress = progressRef.current % totalWP;
+    const loopProgress = s.progress % totalWP;
     const segIndex = Math.floor(loopProgress);
     const segT = loopProgress - segIndex;
+    const smoothT = segT * segT * (3 - 2 * segT);
 
     const from = waypoints[segIndex % totalWP];
     const to = waypoints[(segIndex + 1) % totalWP];
 
-    // Smooth easing (smoothstep)
-    const smoothT = segT * segT * (3 - 2 * segT);
+    const baseX = (from[0] + (to[0] - from[0]) * smoothT) * CELL + CELL / 2 - GRID_W / 2;
+    const baseZ = (from[1] + (to[1] - from[1]) * smoothT) * CELL + CELL / 2 - GRID_H / 2;
 
-    const x = (from[0] + (to[0] - from[0]) * smoothT) * CELL + CELL / 2 - GRID_W / 2;
-    const z = (from[1] + (to[1] - from[1]) * smoothT) * CELL + CELL / 2 - GRID_H / 2;
+    // Mouse avoidance
+    const mx = mouseWorldRef.current.x;
+    const mz = mouseWorldRef.current.z;
+    const dx = baseX - mx;
+    const dz = baseZ - mz;
+    const dist = Math.sqrt(dx * dx + dz * dz);
 
-    groupRef.current.position.set(x, RAIL_H * 0.5, z);
+    const FLEE_RADIUS = 3.0;
+    const SLOW_RADIUS = 4.5;
 
-    // Face direction of travel
-    const dx = to[0] - from[0];
-    const dz = to[1] - from[1];
-    if (dx !== 0 || dz !== 0) {
-      groupRef.current.rotation.y = Math.atan2(dx, dz);
+    // Slow down near mouse, pause if very close
+    let speedMult = 1.0;
+    if (dist < FLEE_RADIUS) {
+      speedMult = 0.05; // nearly stop
+    } else if (dist < SLOW_RADIUS) {
+      const t2 = (dist - FLEE_RADIUS) / (SLOW_RADIUS - FLEE_RADIUS);
+      speedMult = 0.05 + t2 * 0.95;
     }
 
-    // Pulsing status light
+    // Advance along path (clamped delta to avoid jumps on tab switch)
+    const clampedDelta = Math.min(delta, 0.05);
+    s.progress += speed * clampedDelta * speedMult;
+
+    // Position with flee offset
+    let fleeX = 0;
+    let fleeZ = 0;
+    if (dist < FLEE_RADIUS && dist > 0.01) {
+      const fleePower = (1 - dist / FLEE_RADIUS);
+      const fleeStrength = fleePower * fleePower * 1.2;
+      fleeX = (dx / dist) * fleeStrength;
+      fleeZ = (dz / dist) * fleeStrength;
+    }
+
+    // Smooth the flee with lerp
+    const prevX = groupRef.current.position.x;
+    const prevZ = groupRef.current.position.z;
+    const targetX = baseX + fleeX;
+    const targetZ = baseZ + fleeZ;
+    const lerpFactor = 0.08;
+
+    groupRef.current.position.set(
+      prevX + (targetX - prevX) * lerpFactor,
+      RAIL_H * 0.5,
+      prevZ + (targetZ - prevZ) * lerpFactor,
+    );
+
+    // Face direction of travel
+    const dirX = to[0] - from[0];
+    const dirZ = to[1] - from[1];
+    if (dirX !== 0 || dirZ !== 0) {
+      const targetRot = Math.atan2(dirX, dirZ);
+      // Smooth rotation
+      const currentRot = groupRef.current.rotation.y;
+      let diff = targetRot - currentRot;
+      // Wrap angle
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      groupRef.current.rotation.y += diff * 0.1;
+    }
+
+    // Pulsing status light — faster when fleeing
     if (lightRef.current) {
       const mat = lightRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.6 + Math.sin(t * 3 + id * 2) * 0.3;
+      const pulseSpeed = dist < FLEE_RADIUS ? 8 : 3;
+      mat.opacity = 0.6 + Math.sin(t * pulseSpeed + id * 2) * 0.3;
     }
   });
 
@@ -192,57 +233,35 @@ function Robot({
 
   return (
     <group ref={groupRef}>
-      {/* Body (dark) */}
       <mesh position={[0, bodyH / 2, 0]}>
         <boxGeometry args={[bodyW, bodyH, bodyD]} />
         <meshStandardMaterial color={COL_ROBOT_BODY} roughness={0.4} metalness={0.3} />
       </mesh>
-
-      {/* Top plate (red) */}
       <mesh position={[0, bodyH + 0.02, 0]}>
         <boxGeometry args={[bodyW + 0.02, 0.04, bodyD + 0.02]} />
         <meshStandardMaterial color={COL_ROBOT_TOP} roughness={0.3} metalness={0.2} />
       </mesh>
-
-      {/* Display face (front dark panel) */}
       <mesh position={[0, bodyH * 0.5, bodyD / 2 + 0.001]}>
         <planeGeometry args={[bodyW * 0.7, bodyH * 0.55]} />
         <meshBasicMaterial color="#0a0a0a" />
       </mesh>
-
-      {/* Number on display */}
       <mesh position={[0, bodyH * 0.5, bodyD / 2 + 0.003]}>
         <planeGeometry args={[bodyW * 0.35, bodyH * 0.3]} />
         <meshBasicMaterial color="#334155" transparent opacity={0.4} />
       </mesh>
-
-      {/* Status light (amber on top) */}
       <mesh ref={lightRef} position={[0, bodyH + 0.08, 0]}>
         <sphereGeometry args={[0.04, 8, 8]} />
-        <meshBasicMaterial
-          color={COL_ROBOT_LIGHT}
-          transparent
-          opacity={0.8}
-        />
+        <meshBasicMaterial color={COL_ROBOT_LIGHT} transparent opacity={0.8} />
       </mesh>
-
-      {/* Light glow */}
-      <pointLight
-        position={[0, bodyH + 0.12, 0]}
-        color={COL_ROBOT_LIGHT}
-        intensity={0.3}
-        distance={1.5}
-        decay={2}
-      />
-
-      {/* Wheels (4 small cylinders) */}
-      {[
+      <pointLight position={[0, bodyH + 0.12, 0]} color={COL_ROBOT_LIGHT}
+        intensity={0.3} distance={1.5} decay={2} />
+      {([
         [-bodyW * 0.35, 0.04, bodyD * 0.35],
         [bodyW * 0.35, 0.04, bodyD * 0.35],
         [-bodyW * 0.35, 0.04, -bodyD * 0.35],
         [bodyW * 0.35, 0.04, -bodyD * 0.35],
-      ].map((pos, i) => (
-        <mesh key={i} position={pos as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
+      ] as [number, number, number][]).map((pos, i) => (
+        <mesh key={i} position={pos} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.04, 0.04, 0.06, 8]} />
           <meshStandardMaterial color="#444" roughness={0.6} metalness={0.4} />
         </mesh>
@@ -254,31 +273,31 @@ function Robot({
 // ─── Scene composition ───
 function Scene() {
   const sceneRef = useRef<THREE.Group>(null);
+  const mouseWorldRef = useRef(new THREE.Vector3(999, 0, 999));
 
   useFrame(({ clock }) => {
     if (!sceneRef.current) return;
-    // Very subtle sway
     const t = clock.getElapsedTime();
     sceneRef.current.rotation.y = Math.sin(t * 0.06) * 0.015 - 0.1;
   });
 
   return (
-    <group ref={sceneRef}>
-      {/* Lighting */}
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[8, 12, 6]} intensity={0.8} color="#e0e8f0" />
-      <directionalLight position={[-5, 8, -4]} intensity={0.3} color="#94a3b8" />
+    <MouseCtx.Provider value={mouseWorldRef}>
+      <MouseTracker mouseWorldRef={mouseWorldRef} />
+      <group ref={sceneRef}>
+        <ambientLight intensity={0.4} />
+        <directionalLight position={[8, 12, 6]} intensity={0.8} color="#e0e8f0" />
+        <directionalLight position={[-5, 8, -4]} intensity={0.3} color="#94a3b8" />
+        <fog attach="fog" args={["#0B1221", 8, 22]} />
 
-      {/* Slight fog for depth */}
-      <fog attach="fog" args={["#0B1221", 8, 22]} />
+        <RailGrid />
+        <BinOpenings />
 
-      <RailGrid />
-      <BinOpenings />
-
-      {ROBOT_DEFS.map((def) => (
-        <Robot key={def.id} id={def.id} waypoints={def.waypoints} speed={def.speed} />
-      ))}
-    </group>
+        {ROBOT_DEFS.map((def) => (
+          <Robot key={def.id} id={def.id} waypoints={def.waypoints} speed={def.speed} />
+        ))}
+      </group>
+    </MouseCtx.Provider>
   );
 }
 
@@ -288,16 +307,9 @@ export default function AutoStoreGrid({ className = "" }: { className?: string }
       <Canvas
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-        camera={{
-          position: [6, 8, 10],
-          fov: 32,
-          near: 0.1,
-          far: 50,
-        }}
+        camera={{ position: [6, 8, 10], fov: 32, near: 0.1, far: 50 }}
         style={{ background: "transparent" }}
-        onCreated={({ camera }) => {
-          camera.lookAt(0, -0.5, 0);
-        }}
+        onCreated={({ camera }) => { camera.lookAt(0, -0.5, 0); }}
       >
         <Scene />
       </Canvas>
