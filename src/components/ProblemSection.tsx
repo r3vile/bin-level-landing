@@ -58,14 +58,15 @@ export default function ProblemSection() {
       {/* Subtle top gradient */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-bg-primary to-transparent z-[2]" />
 
-      {/* AutoStore grid background */}
-      <div className="absolute inset-0 opacity-[0.35]">
+      {/* AutoStore grid background — needs to receive pointer events for mouse interaction */}
+      <div className="absolute inset-0 opacity-[0.35] z-[1]">
         <AutoStoreGrid className="w-full h-full" />
       </div>
       {/* Gradient overlay to fade the grid toward edges */}
-      <div className="absolute inset-0 bg-gradient-to-b from-bg-secondary via-transparent to-bg-secondary z-[1]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-bg-secondary via-transparent to-bg-secondary z-[2] pointer-events-none" />
 
-      <div className="max-w-container mx-auto px-6 relative z-10">
+      <div className="max-w-container mx-auto px-6 relative z-10 pointer-events-none">
+        {/* Re-enable pointer events on interactive children */}
         {/* Header */}
         <div
           ref={sectionRef}
@@ -95,7 +96,7 @@ export default function ProblemSection() {
         {/* Problem cards */}
         <div
           ref={cardsRef}
-          className="grid sm:grid-cols-2 gap-5 mb-24 lg:mb-32"
+          className="grid sm:grid-cols-2 gap-5 mb-24 lg:mb-32 pointer-events-auto"
         >
           {problems.map((problem, i) => (
             <div

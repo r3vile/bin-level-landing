@@ -370,7 +370,7 @@ function Scene() {
           <ambientLight intensity={0.4} />
           <directionalLight position={[8, 12, 6]} intensity={0.8} color="#e0e8f0" />
           <directionalLight position={[-5, 8, -4]} intensity={0.3} color="#94a3b8" />
-          <fog attach="fog" args={["#0B1221", 8, 22]} />
+          <fog attach="fog" args={["#0B1221", 12, 32]} />
 
           <RailGrid />
           <BinOpenings />
@@ -390,7 +390,7 @@ export default function AutoStoreGrid({ className = "" }: { className?: string }
       <Canvas
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-        camera={{ position: [6, 8, 10], fov: 32, near: 0.1, far: 50 }}
+        camera={{ position: [10, 13, 16], fov: 32, near: 0.1, far: 60 }}
         style={{ background: "transparent" }}
         onCreated={({ camera }) => { camera.lookAt(0, -0.5, 0); }}
       >
