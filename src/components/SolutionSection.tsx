@@ -1,6 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+
+const DataFlow = dynamic(() => import("@/components/three/DataFlow"), {
+  ssr: false,
+});
 
 const steps = [
   {
@@ -75,8 +80,12 @@ export default function SolutionSection() {
           ref={stepsRef}
           className="grid md:grid-cols-3 gap-8 lg:gap-6 mb-20 relative"
         >
-          {/* Connecting line (desktop only) */}
-          <div className="hidden md:block absolute top-[72px] left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-[1px]">
+          {/* Animated data flow connecting line (desktop only) */}
+          <div className="hidden md:block absolute top-[52px] left-[calc(16.67%-12px)] right-[calc(16.67%-12px)] h-[40px] pointer-events-none">
+            <DataFlow active={stepsVisible} className="w-full h-full" />
+          </div>
+          {/* Fallback static line for mobile */}
+          <div className="hidden max-md:block absolute top-[72px] left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-[1px]">
             <div className="w-full h-full bg-gradient-to-r from-accent/20 via-accent/40 to-accent/20" />
           </div>
 

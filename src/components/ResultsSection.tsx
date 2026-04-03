@@ -1,12 +1,21 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
 
+const ParticleField = dynamic(() => import("@/components/three/ParticleField"), {
+  ssr: false,
+});
+
+const RingGauge3D = dynamic(() => import("@/components/three/RingGauge3D"), {
+  ssr: false,
+});
+
 const metrics = [
-  { target: 40, suffix: "%", label: "mehr Auslastung", sublabel: "im Referenzprojekt SportFits" },
-  { target: 1, prefix: "< ", suffix: " Tag", label: "Installation", sublabel: "pro Port, ohne Stillstand" },
-  { target: 0, suffix: "", label: "Eingriffe ins System", sublabel: "reine Nachrüstung am Port" },
+  { target: 40, suffix: "%", label: "mehr Auslastung", sublabel: "im Referenzprojekt SportFits", ring: 0.4, ringColor: "#F59E0B" },
+  { target: 1, prefix: "< ", suffix: " Tag", label: "Installation", sublabel: "pro Port, ohne Stillstand", ring: 0.95, ringColor: "#10B981" },
+  { target: 0, suffix: "", label: "Eingriffe ins System", sublabel: "reine Nachrüstung am Port", ring: 1.0, ringColor: "#10B981" },
 ];
 
 const trustBadges = [
@@ -25,6 +34,8 @@ function MetricCard({
   sublabel,
   trigger,
   delay,
+  ring,
+  ringColor,
 }: {
   target: number;
   prefix?: string;
@@ -33,6 +44,8 @@ function MetricCard({
   sublabel: string;
   trigger: boolean;
   delay: number;
+  ring: number;
+  ringColor: string;
 }) {
   const value = useCountUp(target, 2000, trigger);
 
@@ -41,11 +54,23 @@ function MetricCard({
       className={`group glass-card rounded-2xl p-8 lg:p-10 text-center transition-all duration-500 ease-apple hover:shadow-premium hover:border-white/10 hover:-translate-y-1 animate-scale-in ${trigger ? "visible" : ""}`}
       style={{ transitionDelay: `${delay}s` }}
     >
-      <p className="text-gradient text-5xl lg:text-7xl font-bold font-mono mb-4 tracking-tight">
-        {prefix}
-        {value}
-        {suffix}
-      </p>
+      {/* 3D Ring Gauge */}
+      <div className="relative w-32 h-32 mx-auto mb-4">
+        <RingGauge3D
+          progress={ring}
+          color={ringColor}
+          active={trigger}
+          className="absolute inset-0 w-full h-full"
+        />
+        {/* Number overlay centered on ring */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="text-gradient text-3xl lg:text-4xl font-bold font-mono tracking-tight">
+            {prefix}
+            {value}
+            {suffix}
+          </p>
+        </div>
+      </div>
       <p className="text-white text-lg font-semibold mb-1">{label}</p>
       <p className="text-text-muted/70 text-sm">{sublabel}</p>
     </div>
@@ -61,6 +86,9 @@ export default function ResultsSection() {
     <section id="ergebnisse" className="relative py-32 lg:py-40 bg-bg-primary noise-bg overflow-hidden">
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/[0.03] rounded-full blur-[120px]" />
+
+      {/* Three.js Particle Field */}
+      <ParticleField />
 
       <div className="max-w-container mx-auto px-6 relative z-10">
         {/* Header */}

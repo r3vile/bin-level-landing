@@ -9,6 +9,10 @@ const ScanVisualization = dynamic(() => import("@/components/scan3d"), {
   loading: () => <div className="w-full aspect-square" />,
 });
 
+const ParticleField = dynamic(() => import("@/components/three/ParticleField"), {
+  ssr: false,
+});
+
 export default function HeroSection() {
   const { ref, isVisible } = useScrollAnimation(0.05);
   const [mounted, setMounted] = useState(false);
@@ -36,6 +40,9 @@ export default function HeroSection() {
           backgroundSize: "32px 32px",
         }}
       />
+
+      {/* Three.js Particle Field */}
+      <ParticleField />
 
       <div ref={ref} className="max-w-container mx-auto px-6 py-20 lg:py-32 relative z-10">
         <div className="grid lg:grid-cols-5 gap-12 lg:gap-16 items-center">
