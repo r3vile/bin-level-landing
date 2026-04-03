@@ -1,7 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import BinComparison from "@/components/icons/BinComparison";
+
+const AutoStoreGrid = dynamic(() => import("@/components/three/AutoStoreGrid"), {
+  ssr: false,
+});
 
 const problems = [
   {
@@ -51,7 +56,14 @@ export default function ProblemSection() {
   return (
     <section id="problem" className="relative py-32 lg:py-40 bg-bg-secondary noise-bg overflow-hidden">
       {/* Subtle top gradient */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-bg-primary to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-bg-primary to-transparent z-[2]" />
+
+      {/* AutoStore grid background */}
+      <div className="absolute inset-0 opacity-[0.35]">
+        <AutoStoreGrid className="w-full h-full" />
+      </div>
+      {/* Gradient overlay to fade the grid toward edges */}
+      <div className="absolute inset-0 bg-gradient-to-b from-bg-secondary via-transparent to-bg-secondary z-[1]" />
 
       <div className="max-w-container mx-auto px-6 relative z-10">
         {/* Header */}

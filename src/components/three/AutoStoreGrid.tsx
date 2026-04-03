@@ -34,14 +34,20 @@ function cellKey(col: number, row: number): string {
 }
 
 // ─── Robot path definitions ───
-// Speed = cells per second (1.2 = crosses ~1 cell per 0.8s)
+// Speed = cells per second
 const ROBOT_DEFS = [
-  { id: 0, speed: 1.4, waypoints: [[2, 1], [2, 5], [7, 5], [7, 1]] },
-  { id: 1, speed: 1.1, waypoints: [[10, 2], [10, 7], [14, 7], [14, 2]] },
-  { id: 2, speed: 1.6, waypoints: [[5, 7], [12, 7], [12, 3], [5, 3]] },
-  { id: 3, speed: 1.0, waypoints: [[1, 8], [8, 8], [8, 6], [1, 6]] },
-  { id: 4, speed: 1.3, waypoints: [[13, 1], [13, 5], [15, 5], [15, 1]] },
-  { id: 5, speed: 1.2, waypoints: [[3, 2], [3, 4], [6, 4], [6, 2]] },
+  { id: 0,  speed: 1.4, waypoints: [[2, 1], [2, 5], [7, 5], [7, 1]] },
+  { id: 1,  speed: 1.1, waypoints: [[10, 2], [10, 7], [14, 7], [14, 2]] },
+  { id: 2,  speed: 1.6, waypoints: [[5, 7], [12, 7], [12, 3], [5, 3]] },
+  { id: 3,  speed: 1.0, waypoints: [[1, 8], [8, 8], [8, 6], [1, 6]] },
+  { id: 4,  speed: 1.3, waypoints: [[13, 1], [13, 5], [15, 5], [15, 1]] },
+  { id: 5,  speed: 1.2, waypoints: [[3, 2], [3, 4], [6, 4], [6, 2]] },
+  { id: 6,  speed: 1.3, waypoints: [[0, 0], [0, 4], [4, 4], [4, 0]] },
+  { id: 7,  speed: 1.0, waypoints: [[9, 0], [9, 3], [12, 3], [12, 0]] },
+  { id: 8,  speed: 1.5, waypoints: [[7, 6], [7, 9], [11, 9], [11, 6]] },
+  { id: 9,  speed: 1.2, waypoints: [[14, 5], [14, 9], [15, 9], [15, 5]] },
+  { id: 10, speed: 1.1, waypoints: [[0, 5], [0, 9], [3, 9], [3, 5]] },
+  { id: 11, speed: 1.4, waypoints: [[8, 1], [8, 4], [10, 4], [10, 1]] },
 ];
 
 // ─── Mouse Raycaster — projects pointer onto grid plane (y=0) ───
