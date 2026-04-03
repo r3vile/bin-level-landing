@@ -13,10 +13,6 @@ const ParticleField = dynamic(() => import("@/components/three/ParticleField"), 
   ssr: false,
 });
 
-const NoiseBlob = dynamic(() => import("@/components/three/NoiseBlob"), {
-  ssr: false,
-});
-
 export default function HeroSection() {
   const { ref, isVisible } = useScrollAnimation(0.05);
   const [mounted, setMounted] = useState(false);
@@ -110,17 +106,13 @@ export default function HeroSection() {
             </p>
           </div>
 
-          {/* Right column (2/5) — Scan Animation + Blob */}
+          {/* Right column (2/5) — Scan Animation */}
           <div
             className={`lg:col-span-2 animate-scale-in ${mounted ? "visible" : ""}`}
             style={{ transitionDelay: "0.3s" }}
           >
             <div className="relative aspect-[4/5] max-w-sm lg:max-w-md mx-auto">
-              {/* Noise blob behind the scan visualization */}
-              <NoiseBlob className="absolute -inset-[30%] z-0 opacity-60" />
-              <div className="relative z-10 w-full h-full">
-                <ScanVisualization className="w-full h-full" />
-              </div>
+              <ScanVisualization className="w-full h-full" />
             </div>
           </div>
         </div>

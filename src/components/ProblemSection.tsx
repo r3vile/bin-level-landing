@@ -1,12 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import BinComparison from "@/components/icons/BinComparison";
-
-const ParticleField = dynamic(() => import("@/components/three/ParticleField"), {
-  ssr: false,
-});
 
 const problems = [
   {
@@ -57,9 +52,6 @@ export default function ProblemSection() {
     <section id="problem" className="relative py-32 lg:py-40 bg-bg-secondary noise-bg overflow-hidden">
       {/* Subtle top gradient */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-bg-primary to-transparent" />
-
-      {/* Three.js Particle Field */}
-      <ParticleField />
 
       <div className="max-w-container mx-auto px-6 relative z-10">
         {/* Header */}

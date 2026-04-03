@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import ProblemSection from "@/components/ProblemSection";
@@ -9,14 +8,9 @@ import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
 
-const ScrollGlow = dynamic(() => import("@/components/three/ScrollGlow"), {
-  ssr: false,
-});
-
 export default function Home() {
   return (
     <>
-      <ScrollGlow />
       <Navbar />
       <main>
         <HeroSection />
