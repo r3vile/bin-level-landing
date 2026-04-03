@@ -24,14 +24,15 @@ const COL_BIN_INSIDE = "#0e1622";
 // ─── Shared mouse world-position (on the grid plane) ───
 const MouseCtx = createContext<React.RefObject<THREE.Vector3>>(null!);
 
-// ─── Robot path definitions (slower speeds) ───
+// ─── Robot path definitions ───
+// Speed = cells per second (1.2 = crosses ~1 cell per 0.8s)
 const ROBOT_DEFS = [
-  { id: 0, speed: 0.45, waypoints: [[2, 1], [2, 5], [7, 5], [7, 1]] },
-  { id: 1, speed: 0.35, waypoints: [[10, 2], [10, 7], [14, 7], [14, 2]] },
-  { id: 2, speed: 0.5, waypoints: [[5, 7], [12, 7], [12, 3], [5, 3]] },
-  { id: 3, speed: 0.3, waypoints: [[1, 8], [8, 8], [8, 6], [1, 6]] },
-  { id: 4, speed: 0.4, waypoints: [[13, 1], [13, 5], [15, 5], [15, 1]] },
-  { id: 5, speed: 0.38, waypoints: [[3, 2], [3, 4], [6, 4], [6, 2]] },
+  { id: 0, speed: 1.4, waypoints: [[2, 1], [2, 5], [7, 5], [7, 1]] },
+  { id: 1, speed: 1.1, waypoints: [[10, 2], [10, 7], [14, 7], [14, 2]] },
+  { id: 2, speed: 1.6, waypoints: [[5, 7], [12, 7], [12, 3], [5, 3]] },
+  { id: 3, speed: 1.0, waypoints: [[1, 8], [8, 8], [8, 6], [1, 6]] },
+  { id: 4, speed: 1.3, waypoints: [[13, 1], [13, 5], [15, 5], [15, 1]] },
+  { id: 5, speed: 1.2, waypoints: [[3, 2], [3, 4], [6, 4], [6, 2]] },
 ];
 
 // ─── Mouse Raycaster — projects pointer onto grid plane (y=0) ───
@@ -137,115 +138,142 @@ function cellToWorld(col: number, row: number): [number, number] {
 }
 
 // Check if a grid cell is too close to the mouse (within 2 cells)
-function isCellBlocked(col: number, row: number, mouseWorld: THREE.Vector3): boolean {
+function isCellNearMouse(col: number, row: number, mouseWorld: THREE.Vector3): boolean {
   const [wx, wz] = cellToWorld(col, row);
   const dx = wx - mouseWorld.x;
   const dz = wz - mouseWorld.z;
-  return (dx * dx + dz * dz) < (2.0 * CELL) * (2.0 * CELL);
+  return (dx * dx + dz * dz) < (2.2 * CELL) * (2.2 * CELL);
 }
 
-// Expand waypoints into individual cell-by-cell steps along the grid
-function expandWaypoints(waypoints: number[][]): number[][] {
-  const steps: number[][] = [];
-  for (let w = 0; w < waypoints.length; w++) {
-    const from = waypoints[w];
-    const to = waypoints[(w + 1) % waypoints.length];
-    const dc = Math.sign(to[0] - from[0]);
-    const dr = Math.sign(to[1] - from[1]);
-    let c = from[0];
-    let r = from[1];
-    steps.push([c, r]);
-    while (c !== to[0] || r !== to[1]) {
-      if (c !== to[0]) c += dc;
-      else if (r !== to[1]) r += dr;
-      steps.push([c, r]);
-    }
-  }
-  return steps;
+// Check if a grid cell is within grid bounds
+function inBounds(col: number, row: number): boolean {
+  return col >= 0 && col < COLS && row >= 0 && row < ROWS;
 }
 
-// ─── Single Robot with cell-by-cell grid movement ───
+// 4 grid directions: right, down, left, up
+const DIRS: [number, number][] = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+
+// ─── Single Robot with cell-by-cell grid movement + rerouting ───
 function Robot({ waypoints, speed, id }: { waypoints: number[][]; speed: number; id: number }) {
   const groupRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.Mesh>(null);
   const mouseWorldRef = useContext(MouseCtx);
 
-  // Expand waypoints into individual cell steps once
-  const steps = useMemo(() => expandWaypoints(waypoints), [waypoints]);
-
-  // Mutable state
+  // Mutable state — robot lives at a grid cell and moves toward a target cell
   const state = useRef({
-    stepIndex: Math.floor(Math.random() * steps.length), // stagger start
-    cellT: 0, // 0-1 progress between current cell and next
+    col: waypoints[0][0],
+    row: waypoints[0][1],
+    targetCol: waypoints[0][0],
+    targetRow: waypoints[0][1],
+    wpIndex: 0, // which high-level waypoint we're heading toward
+    cellT: 0,   // 0-1 interpolation between current and target cell
     waiting: false,
+    staggerDone: false,
   });
+
+  // Stagger initial position along the path
+  useMemo(() => {
+    const s = state.current;
+    const stagger = Math.floor(Math.random() * waypoints.length);
+    s.wpIndex = stagger % waypoints.length;
+    s.col = waypoints[s.wpIndex][0];
+    s.row = waypoints[s.wpIndex][1];
+    s.targetCol = s.col;
+    s.targetRow = s.row;
+  }, [waypoints]);
 
   useFrame(({ clock }, delta) => {
     if (!groupRef.current || !mouseWorldRef.current) return;
     const t = clock.getElapsedTime();
     const s = state.current;
     const clampedDelta = Math.min(delta, 0.05);
-    const totalSteps = steps.length;
+    const mouse = mouseWorldRef.current;
 
-    const nextCell = steps[(s.stepIndex + 1) % totalSteps];
-
-    // Check if the NEXT cell (and the one after) are blocked by mouse
-    const nextBlocked = isCellBlocked(nextCell[0], nextCell[1], mouseWorldRef.current);
-    const afterNext = steps[(s.stepIndex + 2) % totalSteps];
-    const afterBlocked = isCellBlocked(afterNext[0], afterNext[1], mouseWorldRef.current);
-
-    if (nextBlocked || afterBlocked) {
-      // Stop at current cell — don't advance
-      s.waiting = true;
-      s.cellT = Math.max(s.cellT - clampedDelta * speed * 2, 0); // ease back to cell center
-    } else {
-      s.waiting = false;
-      // Advance through current cell
+    // ── Advance interpolation toward target cell ──
+    if (s.targetCol !== s.col || s.targetRow !== s.row) {
       s.cellT += speed * clampedDelta;
+      s.waiting = false;
 
       if (s.cellT >= 1) {
-        s.cellT -= 1;
-        s.stepIndex = (s.stepIndex + 1) % totalSteps;
+        // Arrived at target cell
+        s.col = s.targetCol;
+        s.row = s.targetRow;
+        s.cellT = 0;
       }
     }
 
-    // Recalculate after potential step change
-    const curCell = steps[s.stepIndex % totalSteps];
-    const nxtCell = steps[(s.stepIndex + 1) % totalSteps];
+    // ── Pick next target when at a cell (cellT ~= 0) ──
+    if (s.cellT === 0) {
+      // Figure out which direction leads toward current waypoint target
+      const wp = waypoints[s.wpIndex];
 
-    // Smoothstep for easing within cell
-    const eased = s.cellT * s.cellT * (3 - 2 * s.cellT);
+      // Did we reach the current waypoint?
+      if (s.col === wp[0] && s.row === wp[1]) {
+        s.wpIndex = (s.wpIndex + 1) % waypoints.length;
+      }
 
-    const [curX, curZ] = cellToWorld(curCell[0], curCell[1]);
-    const [nxtX, nxtZ] = cellToWorld(nxtCell[0], nxtCell[1]);
+      const goalWP = waypoints[s.wpIndex];
+      const dc = Math.sign(goalWP[0] - s.col);
+      const dr = Math.sign(goalWP[1] - s.row);
 
-    const targetX = curX + (nxtX - curX) * eased;
-    const targetZ = curZ + (nxtZ - curZ) * eased;
+      // Build a list of preferred moves: primary direction first, then perpendiculars
+      const moves: [number, number][] = [];
+      // Primary: toward waypoint (prefer col first, then row)
+      if (dc !== 0) moves.push([dc, 0]);
+      if (dr !== 0) moves.push([0, dr]);
+      // Perpendicular alternatives (for rerouting around mouse)
+      for (const [dirC, dirR] of DIRS) {
+        if (!moves.some(m => m[0] === dirC && m[1] === dirR)) {
+          // Don't go backwards (opposite of where we came from)
+          const backC = -(s.targetCol - s.col) || 0;
+          const backR = -(s.targetRow - s.row) || 0;
+          if (dirC !== backC || dirR !== backR || (backC === 0 && backR === 0)) {
+            moves.push([dirC, dirR]);
+          }
+        }
+      }
 
-    // Smooth position lerp
-    const prevX = groupRef.current.position.x;
-    const prevZ = groupRef.current.position.z;
-    const lerpFactor = 0.15;
+      // Pick the first move that's in-bounds and not near the mouse
+      let picked = false;
+      for (const [mc, mr] of moves) {
+        const nc = s.col + mc;
+        const nr = s.row + mr;
+        if (inBounds(nc, nr) && !isCellNearMouse(nc, nr, mouse)) {
+          s.targetCol = nc;
+          s.targetRow = nr;
+          picked = true;
+          break;
+        }
+      }
 
-    groupRef.current.position.set(
-      prevX + (targetX - prevX) * lerpFactor,
-      RAIL_H * 0.5,
-      prevZ + (targetZ - prevZ) * lerpFactor,
-    );
+      if (!picked) {
+        // All directions blocked — wait in place
+        s.waiting = true;
+      }
+    }
 
-    // Face direction of travel
-    const dirX = nxtCell[0] - curCell[0];
-    const dirZ = nxtCell[1] - curCell[1];
+    // ── Compute world position ──
+    const [curX, curZ] = cellToWorld(s.col, s.row);
+    const [tgtX, tgtZ] = cellToWorld(s.targetCol, s.targetRow);
+
+    const posX = curX + (tgtX - curX) * s.cellT;
+    const posZ = curZ + (tgtZ - curZ) * s.cellT;
+
+    groupRef.current.position.set(posX, RAIL_H * 0.5, posZ);
+
+    // ── Face direction of travel ──
+    const dirX = s.targetCol - s.col;
+    const dirZ = s.targetRow - s.row;
     if (dirX !== 0 || dirZ !== 0) {
       const targetRot = Math.atan2(dirX, dirZ);
       const currentRot = groupRef.current.rotation.y;
       let diff = targetRot - currentRot;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      groupRef.current.rotation.y += diff * 0.1;
+      groupRef.current.rotation.y += diff * 0.15;
     }
 
-    // Pulsing status light — faster when waiting
+    // ── Pulsing status light ──
     if (lightRef.current) {
       const mat = lightRef.current.material as THREE.MeshBasicMaterial;
       const pulseSpeed = s.waiting ? 6 : 3;
